@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>World War 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+:root{--bg:#080c14;--card:#111827;--card2:#1a2332;--border:rgba(255,255,255,.07);--accent:#3b82f6;--cyan:#22d3ee;--gold:#fbbf24;--green:#34d399;--red:#f87171;--text:#f1f5f9;--muted:#94a3b8;--purple:#a78bfa}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Vazirmatn',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden;user-select:none}
+#loading{position:fixed;inset:0;background:#05080f;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+#loading.hide{opacity:0;pointer-events:none!important;visibility:hidden;display:none!important}
+.load-logo{font-size:2.3rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.load-bar-bg{width:230px;height:5px;background:#1e293b;border-radius:10px;margin-top:26px;overflow:hidden}
+.load-bar{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width .25s}
+.load-pct{margin-top:10px;font-size:.78rem;color:var(--muted)}
+#start{min-height:100vh;display:none;flex-direction:column;align-items:center;padding:18px 14px 36px;background:radial-gradient(ellipse 100% 55% at 50% -8%,rgba(59,130,246,.14),transparent),var(--bg);overflow-y:auto}
+.start-logo{font-size:2.1rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:16px}
+.start-sub{color:var(--muted);font-size:.88rem;margin:5px 0 14px}
+.badge{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35);color:#93c5fd;padding:5px 13px;border-radius:20px;font-size:.76rem;font-weight:600;margin-bottom:16px}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.tab{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 11px;border-radius:18px;font-size:.75rem;cursor:pointer;font-family:inherit}
+.tab.active,.tab:hover{background:rgba(59,130,246,.2);border-color:var(--accent);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:9px;width:100%;max-width:460px;margin-bottom:20px}
+.ccard{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;transition:.2s}
+.ccard:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ccard.sel{border-color:var(--accent);background:linear-gradient(180deg,#1e3a5f,#152035);box-shadow:0 0 0 3px rgba(59,130,246,.22)}
+.ccard .f{font-size:1.9rem;display:block;margin-bottom:3px}.ccard .n{font-weight:700;font-size:.82rem}
+.btn-go{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;padding:13px 36px;font-size:1rem;font-weight:700;border-radius:13px;cursor:pointer;font-family:inherit;box-shadow:0 5px 22px rgba(37,99,235,.35);width:100%;max-width:300px}
+.btn-go:disabled{opacity:.4;cursor:not-allowed}
+#game{display:none;height:100vh;flex-direction:column;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(8,12,20,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-shrink:0;z-index:30}
+.topbar .left{display:flex;align-items:center;gap:7px}.topbar .flag{font-size:1.4rem}.topbar .cname{font-weight:700;font-size:.9rem}
+.topbar .online{background:#064e3b;color:#6ee7b7;font-size:.62rem;padding:2px 7px;border-radius:10px;font-weight:600}
+.top-res{display:flex;gap:5px;flex-wrap:wrap}.tres{background:var(--card2);border:1px solid var(--border);padding:3px 7px;border-radius:7px;font-size:.7rem;font-weight:600;display:flex;align-items:center;gap:2px}
+.main{flex:1;overflow-y:auto;padding:10px 10px 88px;-webkit-overflow-scrolling:touch}
+.hero{position:relative;border-radius:18px;overflow:hidden;margin-bottom:12px;min-height:200px;background:linear-gradient(135deg,#1e293b,#0f172a)}
+.hero-bg{position:absolute;inset:0;opacity:.5}.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,12,20,.25) 0%,rgba(8,12,20,.8) 65%,rgba(8,12,20,.95) 100%)}
+.hero-content{position:relative;z-index:2;padding:14px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.hero-world{background:rgba(255,255,255,.08);padding:3px 9px;border-radius:11px;font-size:.7rem;font-weight:600}
+.hero-name{font-size:1.1rem;font-weight:800}
+.hero-money{font-size:1.7rem;font-weight:800;margin:2px 0}
+.hero-income{font-size:.76rem;color:var(--muted)}
+.hero-stats{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.hstat{text-align:center}.hstat .val{font-size:1.05rem;font-weight:700}.hstat .lbl{font-size:.6rem;color:var(--muted)}
+.hero-tags{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.htag{background:rgba(255,255,255,.07);border:1px solid var(--border);padding:2px 8px;border-radius:16px;font-size:.65rem;font-weight:500}
+.htag.green{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)}
+.htag.gold{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--gold)}
+.htag.blue{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:#93c5fd}
+.htag.purple{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.25);color:var(--purple)}
+.weather-bar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 12px;margin-bottom:12px;font-size:.78rem}
+.weather-bar .wi{font-size:1.3rem}.weather-bar .we{font-weight:600}.weather-bar .weff{font-size:.68rem;color:var(--muted);margin-right:auto}
+.act-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.act-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;cursor:pointer;min-height:82px;display:flex;flex-direction:column;justify-content:flex-end;transition:.15s}
+.act-card:active{transform:scale(.97)}.act-card .icon{font-size:1.4rem;margin-bottom:4px}.act-card .title{font-weight:700;font-size:.85rem}.act-card .sub{font-size:.64rem;color:var(--muted)}
+.act-card.army{background:linear-gradient(135deg,#0c1a2e,#12253d)}.act-card.war{background:linear-gradient(135deg,#1a1015,#2a1520)}
+.act-card.dip{background:linear-gradient(135deg,#0f1a2a,#15253a)}.act-card.eco{background:linear-gradient(135deg,#0f1f1a,#152e25)}
+.act-card.decl{background:linear-gradient(135deg,#1a1525,#2a1f3a)}.act-card.chat{background:linear-gradient(135deg,#0f1a25,#152a35)}
+.sec{margin-bottom:12px}.sec-title{font-size:.78rem;font-weight:700;color:var(--cyan);margin-bottom:7px}
+.sec-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:11px}
+.clist{display:flex;flex-direction:column;gap:3px;max-height:160px;overflow-y:auto}
+.crow{display:flex;align-items:center;gap:7px;padding:7px;border-radius:9px;cursor:pointer;font-size:.78rem}
+.crow:hover,.crow.sel{background:rgba(59,130,246,.1)}
+.crow .rel{margin-right:auto;font-size:.62rem;padding:2px 7px;border-radius:9px;font-weight:600}
+.r-peace{background:rgba(52,211,153,.12);color:var(--green)}.r-war{background:rgba(248,113,113,.12);color:var(--red)}
+.r-ally{background:rgba(59,130,246,.12);color:#93c5fd}.r-self{background:rgba(167,139,250,.12);color:var(--purple)}
+.r-nap{background:rgba(251,191,36,.12);color:var(--gold)}.r-pending{background:rgba(251,191,36,.15);color:var(--gold)}
+.ugrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ubtn{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;font-family:inherit;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:100px}
+.ubtn:disabled{opacity:.35}.ubtn .ic{font-size:1.45rem;line-height:1;margin-bottom:2px}
+.ubtn .nm{font-weight:700;font-size:.78rem;line-height:1.3}
+.ubtn .cs{font-size:.7rem;color:var(--gold);font-weight:600}
+.ubtn .tm{font-size:.65rem;color:var(--muted)}
+.ugrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.qitem{background:var(--card2);border-radius:9px;padding:7px 9px;margin-bottom:4px;font-size:.72rem}
+.qbar{height:3px;background:#1e293b;border-radius:2px;margin-top:3px;overflow:hidden}
+.qfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));transition:width .4s}
+.chatbox{max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:7px}
+.cmsg{background:var(--card2);border-radius:9px;padding:6px 9px;font-size:.72rem;line-height:1.4}
+.cmsg .fr{font-weight:700;color:var(--accent);font-size:.65rem}
+.cmsg.sys{background:transparent;color:var(--muted);text-align:center;font-size:.68rem}
+.cmsg.dip{border-right:3px solid var(--gold)}.cmsg.priv{border-right:3px solid var(--purple)}
+.cinp{display:flex;gap:5px}.cinp input,.cinp textarea{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:8px 11px;color:var(--text);font-family:inherit;font-size:.78rem}
+.cinp button,.abtn{border:none;border-radius:9px;font-family:inherit;font-weight:600;cursor:pointer}
+.cinp button{background:var(--accent);color:#fff;padding:8px 13px;font-size:.78rem}
+.elog{max-height:90px;overflow-y:auto;font-size:.68rem;line-height:1.4;color:var(--muted)}
+.elog .e{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.elog .e.war{color:var(--red)}.elog .e.ok{color:var(--green)}.elog .e.dip{color:#93c5fd}.elog .e.imp{color:var(--gold)}
+.botnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,14,22,.96);backdrop-filter:blur(14px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:5px 2px calc(5px + env(safe-area-inset-bottom));z-index:40}
+.bnav{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 4px;cursor:pointer;color:var(--muted);font-size:.58rem;font-weight:500;min-width:48px;border:none;background:none;font-family:inherit}
+.bnav .bi{font-size:1.2rem}.bnav.active{color:var(--accent)}
+.panel{display:none;position:fixed;inset:0;background:#0b1220!important;z-index:80;flex-direction:column;overflow:hidden}
+.panel.show{display:flex!important}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-head h2{font-size:1rem;font-weight:700}
+.panel-close{background:var(--card2);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:9px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.panel-body{flex:1;overflow-y:auto;padding:12px}
+#map-wrap{width:100%;aspect-ratio:2/1;background:#0a1628;border-radius:13px;position:relative;overflow:hidden;border:1px solid var(--border);box-shadow:inset 0 0 40px rgba(0,0,0,.5)}
+.mapbg{position:absolute;inset:0;background:radial-gradient(ellipse at 15% 40%,#0a2838 0%,transparent 40%),radial-gradient(ellipse at 55% 50%,#0a1e2e 0%,transparent 35%),linear-gradient(180deg,#040c14,#0a1520)}
+.cnode{position:absolute;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid rgba(255,255,255,.35);box-shadow:0 2px 10px rgba(0,0,0,.7),0 0 0 1px rgba(0,0,0,.3);z-index:2;background:rgba(15,25,45,.85);backdrop-filter:blur(4px);transform:translate(-50%,-50%);font-size:1rem}
+.cnode.player{border-color:#3b82f6;box-shadow:0 0 12px rgba(59,130,246,.5)}.cnode.at-war{border-color:#ef4444}.cnode.ally{border-color:#10b981}.cnode.defeated{opacity:.3;filter:grayscale(1)}
+.spoint{position:absolute;width:16px;height:16px;border-radius:4px;background:#f59e0b;border:2px solid #fde68a;z-index:5;transform:translate(-50%,-50%);font-size:.55rem;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(245,158,11,.7)}
+.selbox{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:.78rem;line-height:1.55;margin-bottom:10px}
+.selbox strong{color:var(--cyan)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ditem{background:rgba(255,255,255,.04);border-radius:8px;padding:7px;text-align:center}
+.ditem .dv{font-weight:700;font-size:.9rem}.ditem .dl{font-size:.6rem;color:var(--muted)}
+.abtn{width:100%;padding:10px;margin-bottom:6px;border-radius:11px;font-size:.82rem;display:flex;align-items:center;justify-content:center;gap:5px}
+.abtn:disabled{opacity:.35;cursor:not-allowed}
+.b-red{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff}.b-blue{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+.b-green{background:linear-gradient(135deg,#059669,#047857);color:#fff}.b-gray{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.b-gold{background:linear-gradient(135deg,#d97706,#b45309);color:#fff}.b-purple{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff}
+.req-card{background:var(--card2);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:10px;margin-bottom:8px}
+.req-card .rt{font-weight:700;font-size:.8rem}.req-card .rd{font-size:.72rem;color:var(--muted);margin:4px 0 8px}
+.req-acts{display:flex;gap:6px}.req-acts button{flex:1;padding:7px;border:none;border-radius:8px;font-family:inherit;font-weight:600;font-size:.75rem;cursor:pointer}
+.req-ok{background:var(--green);color:#064e3b}.req-no{background:var(--red);color:#fff}
+.decl-area{width:100%;min-height:90px;background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:10px;color:var(--text);font-family:inherit;font-size:.85rem;resize:vertical;margin-bottom:10px}
+.priv-list{display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto;margin-bottom:10px}
+.priv-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;cursor:pointer;background:var(--card2);font-size:.8rem}
+.priv-item:hover,.priv-item.active{background:rgba(59,130,246,.15)}
+.priv-item .unread{background:var(--red);color:#fff;font-size:.6rem;padding:1px 6px;border-radius:8px;margin-right:auto}
+#end{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:100;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+#end h1{font-size:2.1rem;margin-bottom:10px}#end p{color:var(--muted);margin-bottom:22px;max-width:340px;line-height:1.6;font-size:.92rem}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.96);border:1px solid rgba(56,189,248,.35);color:#f1f5f9;padding:12px 16px;border-radius:14px;font-size:.82rem;font-weight:600;z-index:320;max-width:90%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4);line-height:1.4}
+.toast.show{opacity:1}
+
+.force-row{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px}
+.force-row label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:4px}
+.force-row input{width:100%;background:#0a1220;border:1px solid var(--border);border-radius:8px;padding:7px;color:var(--text);font-family:inherit;font-size:.85rem}
+
+#cease-timer,#op-timer{font-variant-numeric:tabular-nums;font-weight:700}
+.timer-precise{font-family:ui-monospace,monospace;letter-spacing:.5px}
+
+.leaflet-popup-content-wrapper{border-radius:14px!important;box-shadow:0 8px 28px rgba(0,0,0,.25)!important}
+.leaflet-popup-content{margin:12px!important}
+.ww-popup .leaflet-popup-content-wrapper{background:#f8fafc}
+
+.ww-country-icon{background:transparent!important;border:none!important}
+.ww-country-icon div{pointer-events:auto!important}
+
+#map-sheet{animation:sheetUp .2s ease}
+@keyframes sheetUp{from{transform:translateY(12px);opacity:.5}to{transform:translateY(0);opacity:1}}
+#sheet-actions button{padding:10px;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:.78rem;cursor:pointer;color:#fff}
+.btn-ally{background:#2563eb}.btn-nap{background:#475569}.btn-war{background:#dc2626}.btn-chat{background:#7c3aed}.btn-atk{background:#991b1b;grid-column:1/-1}
+
+#notif-btn{position:relative}
+#notif-badge{position:absolute;top:-4px;left:-4px;background:#ef4444;color:#fff;font-size:.6rem;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 4px}
+#notif-panel{display:none;position:fixed;top:52px;left:10px;right:10px;max-width:360px;margin:0 auto;background:rgba(15,23,42,.98);border:1px solid rgba(56,189,248,.25);border-radius:16px;z-index:80;max-height:50vh;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#notif-panel.show{display:flex;flex-direction:column}
+#notif-panel .nh{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.9rem}
+#notif-list{overflow-y:auto;max-height:40vh;padding:8px}
+.nitem{padding:10px 12px;border-radius:12px;margin-bottom:6px;background:var(--card2);font-size:.78rem;line-height:1.45;border-right:3px solid var(--accent)}
+.nitem.war{border-right-color:var(--red)}
+.nitem.ok{border-right-color:var(--green)}
+.nitem.dip{border-right-color:#93c5fd}
+.nitem.imp{border-right-color:var(--gold)}
+.nitem .nt{font-size:.65rem;color:var(--muted);margin-top:4px}
+.nitem.unread{background:rgba(59,130,246,.12)}
+
+#rank-list .rrow{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;margin-bottom:4px;background:var(--card2);font-size:.78rem}
+#rank-list .rrow.me{border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.1)}
+#rank-list .rk{width:22px;font-weight:800;color:var(--gold)}
+#event-banner{display:none;margin-bottom:12px;padding:12px;border-radius:14px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(239,68,68,.12));border:1px solid rgba(251,191,36,.35);font-size:.8rem;line-height:1.5}
+#event-banner.show{display:block}
+#event-banner .et{font-weight:800;color:var(--gold);margin-bottom:4px}
+.spy-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px;font-size:.78rem}
+
+.wx-hero{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:18px;background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid var(--border);margin-bottom:12px}
+.wx-hero .wn{font-size:1.2rem;font-weight:800}
+.wx-hero .we{color:var(--green);font-size:.8rem;margin-top:4px}
+.wx-hero .wi{font-size:2.4rem}
+.wx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.wx-cell{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center}
+.wx-cell .v{font-weight:800;font-size:1rem}
+.wx-cell .l{font-size:.65rem;color:var(--muted);margin-top:3px}
+.wx-ready{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.wx-ready .rc{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center}
+.wx-ready .rv{font-weight:800;font-size:1.1rem;color:var(--green)}
+.wx-ready .rl{font-size:.72rem;color:var(--muted);margin-bottom:6px}
+.wx-bar{height:6px;background:#1e293b;border-radius:4px;overflow:hidden}
+.wx-bar i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:4px}
+
+#page-loader{position:fixed;inset:0;z-index:200;display:none!important;align-items:center;justify-content:center;flex-direction:column;opacity:0;transition:opacity .22s ease;pointer-events:none!important;overflow:hidden;background:#050a14}
+#page-loader.show{display:flex!important;opacity:1;pointer-events:none!important}
+.pl-bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse 80% 50% at 20% 20%,rgba(56,189,248,.18),transparent 55%),
+  radial-gradient(ellipse 70% 45% at 80% 30%,rgba(167,139,250,.16),transparent 50%),
+  radial-gradient(ellipse 60% 40% at 50% 90%,rgba(251,191,36,.1),transparent 50%),
+  linear-gradient(160deg,#050a14 0%,#0b1729 45%,#0a1220 100%);
+  animation:plbg 4s ease-in-out infinite alternate}
+.pl-grid{position:absolute;inset:0;background-image:
+  linear-gradient(rgba(56,189,248,.05) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(56,189,248,.05) 1px,transparent 1px);
+  background-size:40px 40px;mask-image:radial-gradient(ellipse at center,black 30%,transparent 75%);
+  animation:plgrid 8s linear infinite}
+.pl-orb{position:absolute;border-radius:50%;filter:blur(30px);opacity:.55;animation:plfloat 5s ease-in-out infinite}
+.pl-orb.a{width:180px;height:180px;background:#38bdf8;top:15%;left:10%;animation-delay:0s}
+.pl-orb.b{width:140px;height:140px;background:#a78bfa;bottom:18%;right:12%;animation-delay:1.2s}
+.pl-orb.c{width:100px;height:100px;background:#fbbf24;top:55%;left:55%;animation-delay:.6s;opacity:.35}
+.pl-card{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;
+  padding:28px 32px;border-radius:22px;
+  background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.18);
+  box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:blur(14px);min-width:200px}
+.pl-ring-wrap{position:relative;width:64px;height:64px;margin-bottom:6px}
+.pl-ring{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.1);border-top-color:#38bdf8;border-right-color:#a78bfa;animation:plspin .7s linear infinite;box-shadow:0 0 28px rgba(56,189,248,.3)}
+.pl-ring2{position:absolute;inset:8px;border-radius:50%;border:2px solid transparent;border-bottom-color:#fbbf24;border-left-color:rgba(251,191,36,.4);animation:plspin .95s linear infinite reverse}
+.pl-core{position:absolute;inset:20px;border-radius:50%;background:radial-gradient(circle,#38bdf8,#6366f1);opacity:.85;animation:plpulse 1.2s ease-in-out infinite}
+.pl-text{margin-top:12px;font-size:.92rem;font-weight:800;color:#f8fafc;letter-spacing:.2px;text-shadow:0 2px 12px rgba(56,189,248,.25)}
+.pl-sub{margin-top:6px;font-size:.72rem;color:#94a3b8}
+.pl-dots{display:flex;gap:5px;margin-top:12px}
+.pl-dots span{width:6px;height:6px;border-radius:50%;background:#38bdf8;opacity:.35;animation:pldot 1s ease-in-out infinite}
+.pl-dots span:nth-child(2){animation-delay:.15s;background:#a78bfa}
+.pl-dots span:nth-child(3){animation-delay:.3s;background:#fbbf24}
+@keyframes plspin{to{transform:rotate(360deg)}}
+@keyframes plpulse{0%,100%{transform:scale(.85);opacity:.5}50%{transform:scale(1);opacity:1}}
+@keyframes pldot{0%,100%{transform:translateY(0);opacity:.3}50%{transform:translateY(-4px);opacity:1}}
+@keyframes plfloat{0%,100%{transform:translate(0,0)}50%{transform:translate(16px,-12px)}}
+@keyframes plbg{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(18deg)}}
+@keyframes plgrid{0%{transform:translateY(0)}100%{transform:translateY(40px)}}
+
+/* === animated global background === */
+body{position:relative;background:#050a14!important;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none!important;background:
+  radial-gradient(ellipse 90% 60% at 15% 10%,rgba(56,189,248,.16),transparent 55%),
+  radial-gradient(ellipse 70% 50% at 85% 20%,rgba(167,139,250,.14),transparent 50%),
+  radial-gradient(ellipse 60% 45% at 50% 100%,rgba(251,191,36,.08),transparent 55%),
+  linear-gradient(165deg,#050a14 0%,#0a1424 40%,#0b1220 100%);
+  animation:gbg 10s ease-in-out infinite alternate}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none!important;
+  background-image:
+    linear-gradient(rgba(56,189,248,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(56,189,248,.035) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at center,black 25%,transparent 80%);
+  animation:ggrid 20s linear infinite}
+#game-orbs{position:fixed;inset:0;z-index:0;pointer-events:none!important;overflow:hidden}
+#game-orbs .orb{position:absolute;border-radius:50%;filter:blur(40px);opacity:.4;animation:gfloat 9s ease-in-out infinite}
+#game-orbs .orb.a{width:220px;height:220px;background:#38bdf8;top:-40px;left:-40px}
+#game-orbs .orb.b{width:180px;height:180px;background:#8b5cf6;bottom:10%;right:-30px;animation-delay:2s}
+#game-orbs .orb.c{width:120px;height:120px;background:#f59e0b;top:45%;left:40%;opacity:.22;animation-delay:4s}
+#start,#game{position:relative;z-index:2}
+.topbar{position:relative;z-index:20}
+.botnav{position:relative;z-index:20}
+.panel{position:fixed;z-index:60;background:#0b1220!important;inset:0;width:100%;height:100%;max-width:100%;border-radius:0}
+.panel.show{display:flex;flex-direction:column}
+.panel-body{flex:1;overflow-y:auto;background:#0b1220}
+.panel-head{background:#0b1220;border-bottom:1px solid rgba(255,255,255,.08)}
+.act-card,.hero,.weather-bar,#event-banner,.htag,.btn-go,.crow,.ubtn,button,.bnav,.top-res,.tres{position:relative;z-index:5;pointer-events:auto!important;cursor:pointer}
+#start{background:transparent!important}
+#game{background:transparent!important}
+.topbar{background:rgba(8,12,20,.75)!important;backdrop-filter:blur(12px)}
+.botnav{background:rgba(8,12,20,.82)!important;backdrop-filter:blur(14px)}
+.panel{background:#0b1220!important}
+.hero{background:linear-gradient(135deg,rgba(15,23,42,.9),rgba(30,20,50,.85))!important;border:1px solid rgba(148,163,184,.12)!important;box-shadow:0 12px 40px rgba(0,0,0,.35)!important}
+.act-card{background:rgba(15,23,42,.75)!important;border:1px solid rgba(148,163,184,.12)!important;backdrop-filter:blur(8px)}
+.sec-card,.selbox,.ubtn,.crow{background:rgba(15,23,42,.7)!important}
+@keyframes gbg{0%{filter:hue-rotate(0deg) brightness(1)}100%{filter:hue-rotate(20deg) brightness(1.08)}}
+@keyframes ggrid{0%{transform:translateY(0)}100%{transform:translateY(48px)}}
+@keyframes gfloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-18px) scale(1.05)}}
+
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.res-card{background:linear-gradient(145deg,rgba(20,28,42,.95),rgba(12,16,28,.98));border:1px solid rgba(148,163,184,.15);border-radius:16px;padding:14px}
+.res-card .rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.8rem;color:#94a3b8}
+.res-card .rv{font-size:1.35rem;font-weight:800;color:#f8fafc}
+.res-card .rp{font-size:.72rem;margin-top:4px}
+.res-card .rp.up{color:#34d399}
+.res-card .rp.down{color:#f87171}
+.res-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px}
+.res-tabs button{flex:0 0 auto;border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.8);color:#cbd5e1;border-radius:12px;padding:8px 12px;font-family:inherit;font-size:.72rem;cursor:pointer}
+.res-tabs button.on{background:linear-gradient(135deg,#b45309,#f59e0b);color:#111;font-weight:700;border-color:transparent}
+.pow-bar{height:8px;background:#1e293b;border-radius:6px;overflow:hidden;margin-top:8px}
+.pow-bar i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#22d3ee)}
+.upg-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;border-radius:12px;background:rgba(15,23,42,.85);border:1px solid rgba(148,163,184,.12);margin-bottom:8px}
+.upg-item .ui-t{font-weight:700;font-size:.82rem}
+.upg-item .ui-s{font-size:.7rem;color:#94a3b8;margin-top:3px}
+.upg-item button{border:none;border-radius:10px;padding:8px 12px;font-family:inherit;font-size:.72rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;white-space:nowrap}
+.upg-item button:disabled{opacity:.4}
+
+.inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.inv-item{background:rgba(15,23,42,.9);border:1px solid rgba(148,163,184,.14);border-radius:14px;padding:12px;text-align:center}
+.inv-item .ii{font-size:1.5rem;margin-bottom:4px}
+.inv-item .in{font-size:.72rem;color:#94a3b8;margin-bottom:4px}
+.inv-item .iv{font-size:1.15rem;font-weight:800;color:#f8fafc}
+.inv-item .ih{font-size:.68rem;color:#64748b;margin-top:3px}
+.inv-sec{font-size:.78rem;font-weight:700;color:var(--cyan);margin:12px 0 8px}
+</style>
+</head>
+<body>
+<div id="game-orbs"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+<div id="page-loader">
+  <div class="pl-bg"></div>
+  <div class="pl-grid"></div>
+  <div class="pl-orb a"></div>
+  <div class="pl-orb b"></div>
+  <div class="pl-orb c"></div>
+  <div class="pl-card">
+    <div class="pl-ring-wrap"><div class="pl-ring"></div><div class="pl-ring2"></div><div class="pl-core"></div></div>
+    <div class="pl-text" id="pl-text">در حال بارگذاری</div>
+    <div class="pl-sub" id="pl-sub">لطفاً صبر کنید</div>
+    <div class="pl-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+<div id="loading">
+<div class="load-logo">WORLD WAR 2026</div>
+<div class="load-sub" id="lstep" style="color:var(--muted);margin:12px 0 8px;font-size:.85rem">در حال بارگذاری موتور استراتژیک...</div>
+<div class="load-bar-bg"><div class="load-bar" id="lbar"></div></div>
+<div class="load-pct" id="lpct">۰٪</div>
+<div style="margin-top:18px;font-size:.72rem;color:#64748b;max-width:280px;text-align:center;line-height:1.6" id="ltips">نقشه جهان · دیپلماسی · اقتصاد · نیروهای نظامی</div>
+</div>
+<div id="start">
+<div class="start-logo">WORLD WAR 2026</div>
+<div class="start-sub">شبیه‌ساز جنگ جهانی آنلاین — نسخه نهایی</div>
+<div class="badge">🔥 آتش‌بس جهانی فعال — سال ۲۰۲۶</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px">
+<label style="background:var(--card);border:1px solid var(--border);padding:8px 14px;border-radius:12px;font-size:.78rem;cursor:pointer">
+📥 بارگذاری فایل ذخیره
+<input type="file" accept="application/json,.json" style="display:none" onchange="if(this.files[0])importSaveFile(this.files[0])">
+</label>
+</div>
+<div class="tabs">
+<button class="tab active" data-c="all">همه</button><button class="tab" data-c="europe">اروپا</button><button class="tab" data-c="asia">آسیا</button>
+<button class="tab" data-c="americas">آمریکا</button><button class="tab" data-c="africa">آفریقا</button><button class="tab" data-c="oceania">اقیانوسیه</button>
+</div>
+<div class="grid" id="cgrid"></div>
+<p style="color:#94a3b8;font-size:.75rem;margin:8px 0">کشور را لمس کن، بعد دکمه پایین را بزن</p>
+<button type="button" id="emergency-start" style="position:relative;z-index:10001;width:100%;max-width:360px;margin:8px auto;display:block;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-weight:800;font-size:1rem;font-family:inherit;pointer-events:auto;touch-action:manipulation" onclick="window.startGame&&window.startGame()">▶ شروع سریع بازی</button>
+<button type="button" class="btn-go" id="btn-go" style="position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation">ورود به اتاق جنگ</button>
+<script>
+(function(){
+  function pickCountry(id){
+    try{
+      if(window.S){ window.S.player=id; }
+      var cards=document.querySelectorAll('.ccard');
+      cards.forEach(function(c){ c.classList.remove('sel'); if(c.getAttribute('data-id')===id)c.classList.add('sel'); });
+      var b=document.getElementById('btn-go');
+      if(b){ b.disabled=false; b.style.opacity='1'; }
+    }catch(e){console.log(e)}
+  }
+  function go(){
+    try{
+      var player = (window.S && window.S.player) ? window.S.player : null;
+      if(!player){
+        var sel=document.querySelector('.ccard.sel');
+        if(sel) player = sel.getAttribute('data-id');
+      }
+      if(!player){ alert('اول یک کشور انتخاب کن'); return; }
+      if(window.S) window.S.player = player;
+      if(typeof window.startGame === 'function'){
+        window.startGame();
+        return;
+      }
+      // fallback minimal enter
+      var st=document.getElementById('start');
+      var gm=document.getElementById('game');
+      if(st) st.style.display='none';
+      if(gm){ gm.style.display='flex'; }
+      alert('موتور بازی کامل لود نشد؛ صفحه بازی باز شد. اگر خالی است فایل را در مرورگر Chrome باز کن.');
+    }catch(e){ alert('خطا: '+e.message); }
+  }
+  function wire(){
+    var b=document.getElementById('btn-go');
+    if(b){
+      b.disabled=false; // allow click; validate inside go()
+      b.onclick=go;
+      b.addEventListener('touchend', function(e){ e.preventDefault(); go(); }, {passive:false});
+    }
+    // also wire country cards after they render
+    setTimeout(function(){
+      document.querySelectorAll('.ccard').forEach(function(card){
+        if(card._wired) return;
+        card._wired=true;
+        card.style.position='relative';
+        card.style.zIndex='9999';
+        card.addEventListener('click', function(){
+          var id=card.getAttribute('data-id');
+          if(id) pickCountry(id);
+        });
+      });
+    }, 800);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+  setInterval(wire, 1500);
+  window.__forceGo = go;
+})();
+</script>
+</div>
+
+<div id="game">
+<div class="topbar">
+<div class="left"><span class="flag" id="tflag">🇦🇺</span><div><div class="cname" id="tname">—</div><span class="online">● آنلاین</span></div></div>
+<div class="top-res">
+<div class="tres">💰 <span id="tmoney">0</span>M$</div>
+<div class="tres">📈 <span id="tincome">0</span></div>
+<div class="tres" id="notif-btn" style="cursor:pointer" onclick="toggleNotif()" title="اعلان‌ها">🔔<span id="notif-badge">0</span></div>
+<div class="tres" id="save-status" style="cursor:pointer" onclick="writeSave()" title="ذخیره دستی">💾</div>
+</div>
+<div id="notif-panel">
+  <div class="nh"><span>🔔 اعلان‌ها</span>
+    <span>
+      <button onclick="clearNotifs()" style="background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:.75rem;cursor:pointer;margin-left:8px">پاک کردن</button>
+      <button onclick="toggleNotif(false)" style="background:var(--card2);border:1px solid var(--border);color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer">✕</button>
+    </span>
+  </div>
+  <div id="notif-list"></div>
+</div>
+</div>
+<div class="main">
+<div class="hero">
+<div class="hero-bg" id="hero-bg"></div><div class="hero-overlay"></div>
+<div class="hero-content">
+<div class="hero-top"><div class="hero-world">🌍 World 2026</div><div class="hero-name" id="hname">—</div></div>
+<div style="font-size:.72rem;color:var(--muted)">موجودی خزانه</div>
+<div class="hero-money" id="hmoney">$0</div>
+<div class="hero-income" id="hincome">درآمد: 0M$</div>
+<div class="hero-stats">
+<div class="hstat"><div class="val" id="hpow">0</div><div class="lbl">⚔️ قدرت</div></div>
+<div class="hstat"><div class="val" id="hinf">0</div><div class="lbl">🪖 پیاده</div></div>
+<div class="hstat"><div class="val" id="htank">0</div><div class="lbl">🛡️ تانک</div></div>
+<div class="hstat"><div class="val" id="hfig">0</div><div class="lbl">✈️ جنگنده</div></div>
+<div class="hstat"><div class="val" id="hdrone">0</div><div class="lbl">🛸 پهپاد</div></div>
+<div class="hstat"><div class="val" id="hship">0</div><div class="lbl">🚢 ناو</div></div>
+<div class="hstat"><div class="val" id="hdes">0</div><div class="lbl">⚓ ناوشکن</div></div>
+</div>
+<div class="hero-tags">
+<span class="htag gold" id="htag-cease">⚡ آتش‌بس: —</span>
+<span class="htag blue" id="htag-year">سال ۲۰۲۶</span>
+<span class="htag green" id="htag-season">بهار</span>
+<span class="htag purple" id="htag-weather">☀️ آفتابی</span>
+</div>
+</div>
+</div>
+<div id="event-banner"><div class="et" id="event-title">—</div><div id="event-desc">—</div></div>
+<div class="weather-bar" style="cursor:pointer" onclick="openPanel('weather')"><span class="wi" id="w-icon">☀️</span><span class="we" id="w-name">آسمان صاف</span><span class="weff" id="w-eff">برای جزئیات بزن</span></div>
+<div class="act-grid">
+<div class="act-card army" onclick="openPanel('army')"><div class="icon">🛡️</div><div class="title">ارتش</div><div class="sub">تولید واحد</div></div>
+<div class="act-card war" onclick="openPanel('war')"><div class="icon">⚔️</div><div class="title">جنگ</div><div class="sub">اعلام جنگ و حمله</div></div>
+<div class="act-card dip" onclick="openPanel('dip')"><div class="icon">🤝</div><div class="title">دیپلماسی</div><div class="sub">اتحاد و پیمان</div></div>
+<div class="act-card eco" onclick="openPanel('eco')"><div class="icon">🏭</div><div class="title">اقتصاد</div><div class="sub">سرمایه‌گذاری</div></div>
+<div class="act-card decl" onclick="openPanel('decl')"><div class="icon">📢</div><div class="title">بیانیه</div><div class="sub">اعلامیه عمومی</div></div>
+<div class="act-card chat" onclick="openPanel('pchat')"><div class="icon">💬</div><div class="title">چت خصوصی</div><div class="sub">پیام با همه کشورها</div></div>
+<div class="act-card dip" onclick="openPanel('un')" style="background:linear-gradient(135deg,#1a2035,#243056)"><div class="icon">🏛️</div><div class="title">سازمان ملل</div><div class="sub">تالار عمومی + قاضی</div></div>
+<div class="act-card eco" onclick="openPanel('rank')" style="background:linear-gradient(135deg,#1a1820,#2a2438)"><div class="icon">🏆</div><div class="title">رتبه‌بندی</div><div class="sub">قدرت و اقتصاد</div></div>
+<div class="act-card war" onclick="openPanel('spy')" style="background:linear-gradient(135deg,#151020,#251830)"><div class="icon">🕵️</div><div class="title">جاسوسی</div><div class="sub">اطلاعات دشمن</div></div>
+<div class="act-card eco" onclick="openPanel('weather')" style="background:linear-gradient(135deg,#0c1a28,#163042)"><div class="icon">🌤️</div><div class="title">وضعیت هوا</div><div class="sub">دما · باد · آمادگی نیرو</div></div>
+<div class="act-card eco" onclick="openPanel('res')" style="background:linear-gradient(135deg,#1a1408,#2a2010)"><div class="icon">📦</div><div class="title">منابع</div><div class="sub">نفت · فولاد · اورانیوم</div></div>
+<div class="act-card army" onclick="openPanel('inv')" style="background:linear-gradient(135deg,#121826,#1a2338)"><div class="icon">📋</div><div class="title">دارایی‌ها</div><div class="sub">نیروها و وسایل من</div></div>
+<div class="act-card war" onclick="openPanel('strait')" style="background:linear-gradient(135deg,#1a1010,#2a1810)"><div class="icon">🌊</div><div class="title">تنگه‌ها</div><div class="sub">بستن · عوارض · حمله</div></div>
+<div class="act-card dip" onclick="openPanel('online')" style="background:linear-gradient(135deg,#0a1f1a,#12352c)"><div class="icon">🌐</div><div class="title">آنلاین</div><div class="sub">اتاق چندنفره</div></div>
+</div>
+<div class="sec" id="req-sec" style="display:none"><div class="sec-title">📩 درخواست‌های دیپلماتیک</div><div class="sec-card" id="req-list"></div></div>
+<div class="sec"><div class="sec-title">🎯 جزئیات کشور انتخاب‌شده</div><div class="sec-card"><div class="selbox" id="selbox">روی نقشه یا لیست کلیک کنید</div></div></div>
+<div class="sec"><div class="sec-title">🏳️ کشورها</div><div class="sec-card"><div class="clist" id="clist"></div></div></div>
+
+<div class="sec">
+<div class="sec-title">📰 خبرگزاری جهانی</div>
+<div class="sec-card"><div class="elog" id="newsbox" style="max-height:120px"></div></div>
+</div>
+<div class="sec"><div class="sec-title">📢 رویدادها</div><div class="sec-card"><div class="elog" id="elog"></div></div></div>
+<div class="sec">
+<div class="sec-title">🌐 کانال عمومی</div>
+<div class="sec-card"><div class="chatbox" id="chatbox"></div>
+<div class="cinp"><input type="text" id="cinput" placeholder="پیام عمومی..." maxlength="180"><button onclick="sendPublic()">ارسال</button></div>
+</div>
+</div>
+</div>
+<div class="botnav">
+<button class="bnav active" data-p="home" onclick="goNav('home')"><span class="bi">🏠</span><span class="bn">خانه</span></button>
+<button class="bnav" data-p="map" onclick="goNav('map')"><span class="bi">🌍</span><span class="bn">نقشه</span></button>
+<button class="bnav" data-p="army" onclick="openPanel('army')"><span class="bi">🛡️</span><span class="bn">ارتش</span></button>
+<button class="bnav" data-p="war" onclick="openPanel('war')"><span class="bi">⚔️</span><span class="bn">جنگ</span></button>
+<button class="bnav" data-p="dip" onclick="openPanel('dip')"><span class="bi">🤝</span><span class="bn">دیپلماسی</span></button>
+<button class="bnav" data-p="pchat" onclick="openPanel('pchat')"><span class="bi">💬</span><span class="bn">خصوصی</span></button>
+</div>
+</div>
+
+<!-- PANELS -->
+<div class="panel" id="panel-army">
+<div class="panel-head"><h2>🛡️ ارتش و تولید</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="sec-title">🪖 نیروی زمینی</div>
+<div class="ugrid" style="margin-bottom:14px">
+<button class="ubtn" id="b-inf" onclick="build('inf')"><span class="ic">🪖</span><span class="nm">پیاده‌نظام</span><span class="cs">۴۵M$</span><span class="tm">⏱ ۴۵ث · +۷۵ نیرو</span></button>
+<button class="ubtn" id="b-tank" onclick="build('tank')"><span class="ic">🛡️</span><span class="nm">تانک</span><span class="cs">۱۳۰M$</span><span class="tm">⏱ ۹۰ث · +۲۲ دستگاه</span></button>
+</div>
+<div class="sec-title">✈️ جنگنده</div>
+<div class="ugrid" style="margin-bottom:14px">
+<button class="ubtn" id="b-fig" onclick="build('fighter')"><span class="ic">✈️</span><span class="nm">F-16</span><span class="cs">۱۹۰M$</span><span class="tm">⏱ ۱۲۰ث · +۱۴ فروند</span></button>
+<button class="ubtn" id="b-fig2" onclick="build('fighter2')"><span class="ic">🛩️</span><span class="nm">Su-35</span><span class="cs">۲۸۰M$</span><span class="tm">⏱ ۱۶۰ث · +۱۰ فروند</span></button>
+<button class="ubtn" id="b-fig3" onclick="build('fighter3')"><span class="ic">🛫</span><span class="nm">F-35</span><span class="cs">۴۲۰M$</span><span class="tm">⏱ ۲۲۰ث · +۸ فروند</span></button>
+</div>
+<div class="sec-title">🛸 پهپاد</div>
+<div class="ugrid" style="margin-bottom:14px">
+<button class="ubtn" id="b-drone" onclick="build('drone')"><span class="ic">🛸</span><span class="nm">Bayraktar TB2</span><span class="cs">۹۵M$</span><span class="tm">⏱ ۷۰ث · +۱۸</span></button>
+<button class="ubtn" id="b-drone2" onclick="build('drone2')"><span class="ic">🛸</span><span class="nm">Shahed-136</span><span class="cs">۷۵M$</span><span class="tm">⏱ ۵۵ث · +۲۵</span></button>
+<button class="ubtn" id="b-drone3" onclick="build('drone3')"><span class="ic">🛰️</span><span class="nm">MQ-9 Reaper</span><span class="cs">۱۶۰M$</span><span class="tm">⏱ ۱۰۰ث · +۱۲</span></button>
+<button class="ubtn" id="b-drone4" onclick="build('drone4')"><span class="ic">✈️</span><span class="nm">Orion / شاهد</span><span class="cs">۱۳۰M$</span><span class="tm">⏱ ۹۰ث · +۱۰</span></button>
+</div>
+<div class="sec-title">🚢 نیروی دریایی</div>
+<div class="ugrid" style="margin-bottom:14px">
+<button class="ubtn" id="b-des" onclick="build('destroyer')"><span class="ic">⚓</span><span class="nm">ناوشکن</span><span class="cs">۲۱۰M$</span><span class="tm">⏱ ۱۴۰ث · +۸</span></button>
+<button class="ubtn" id="b-ship" onclick="build('ship')"><span class="ic">🚢</span><span class="nm">ناو هواپیمابر</span><span class="cs">۳۵۰M$</span><span class="tm">⏱ ۲۲۰ث · +۵</span></button>
+</div>
+<div class="sec-title">⏳ صف ساخت</div>
+<div id="queue"><div style="color:var(--muted);font-size:.72rem">خالی</div></div>
+</div>
+</div>
+<div class="panel" id="panel-war">
+<div class="panel-head"><h2>⚔️ جنگ</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="sec-title">انتخاب کشور هدف</div>
+<div class="clist" id="war-targets" style="max-height:160px;margin-bottom:12px"></div>
+<div class="selbox" id="war-sel">از لیست بالا یک کشور انتخاب کنید</div>
+<button class="abtn b-red" id="btn-declare" disabled onclick="declareWar()">اعلام جنگ رسمی</button>
+<button class="abtn b-gray" id="btn-peace" disabled onclick="sendRequest('peace')">پیشنهاد آتش‌بس</button>
+
+<div id="attack-planner" style="display:none;margin-top:12px">
+  <div class="sec-title">🎯 انتخاب شهر هدف</div>
+  <select id="atk-city" style="width:100%;padding:10px;margin-bottom:10px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:.85rem"></select>
+  <div class="sec-title">🪖 ترکیب نیروی اعزامی (از موجودی شما)</div>
+  <div id="force-inputs" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"></div>
+  <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px" id="force-summary">—</div>
+  <button class="abtn b-red" id="btn-attack" onclick="attack()">🚀 شروع عملیات (۲–۳ دقیقه)</button>
+</div>
+
+<div class="sec-title" style="margin-top:14px">📋 گزارش عملیات</div>
+<div id="battle-report" style="font-size:.75rem;line-height:1.55;color:var(--muted);max-height:180px;overflow-y:auto">هنوز عملیاتی انجام نشده</div>
+</div>
+</div>
+<div class="panel" id="panel-dip">
+<div class="panel-head"><h2>🤝 دیپلماسی</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="sec-title">انتخاب کشور</div>
+<div class="clist" id="dip-targets" style="max-height:160px;margin-bottom:12px"></div>
+<div class="selbox" id="dip-sel">از لیست بالا یک کشور انتخاب کنید</div>
+<button class="abtn b-blue" id="btn-ally" disabled onclick="sendRequest('ally')">ارسال درخواست اتحاد</button>
+<button class="abtn b-gray" id="btn-nap" disabled onclick="sendRequest('nap')">ارسال پیمان عدم تجاوز</button>
+<button class="abtn b-gray" id="btn-break" disabled onclick="breakTreaty()">فسخ پیمان / اتحاد</button>
+</div>
+</div>
+<div class="panel" id="panel-eco">
+<div class="panel-head"><h2>🏭 اقتصاد</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="sec-title">ساختمان‌های اقتصادی (حداکثر سطح ۵)</div>
+<div id="eco-status" style="font-size:.75rem;color:var(--muted);margin-bottom:10px;line-height:1.5">قیمت، درآمد و زمان ساخت برای هر سطح مشخص است.</div>
+<div class="ugrid" id="eco-grid">
+<button class="ubtn" id="b-oil" onclick="build('oil')"><span class="ic">🛢️</span><span class="nm">میدان نفت</span><span class="cs" id="eco-cs-oil">—</span><span class="tm" id="eco-tm-oil">—</span></button>
+<button class="ubtn" id="b-fac" onclick="build('factory')"><span class="ic">🏭</span><span class="nm">مجتمع صنعتی</span><span class="cs" id="eco-cs-factory">—</span><span class="tm" id="eco-tm-factory">—</span></button>
+<button class="ubtn" id="b-port" onclick="build('port')"><span class="ic">⚓</span><span class="nm">بندر تجاری</span><span class="cs" id="eco-cs-port">—</span><span class="tm" id="eco-tm-port">—</span></button>
+<button class="ubtn" id="b-tech" onclick="build('tech')"><span class="ic">🔬</span><span class="nm">مرکز فناوری</span><span class="cs" id="eco-cs-tech">—</span><span class="tm" id="eco-tm-tech">—</span></button>
+<button class="ubtn" id="b-mine" onclick="build('mine')"><span class="ic">⛏️</span><span class="nm">معدن</span><span class="cs" id="eco-cs-mine">—</span><span class="tm" id="eco-tm-mine">—</span></button>
+<button class="ubtn" id="b-farm" onclick="build('farm')"><span class="ic">🌾</span><span class="nm">کشاورزی</span><span class="cs" id="eco-cs-farm">—</span><span class="tm" id="eco-tm-farm">—</span></button>
+<button class="ubtn" id="b-bank" onclick="build('bank')"><span class="ic">🏦</span><span class="nm">بانک مرکزی</span><span class="cs" id="eco-cs-bank">—</span><span class="tm" id="eco-tm-bank">—</span></button>
+<button class="ubtn" id="b-energy" onclick="build('energy')"><span class="ic">⚡</span><span class="nm">نیروگاه</span><span class="cs" id="eco-cs-energy">—</span><span class="tm" id="eco-tm-energy">—</span></button>
+</div>
+<div class="sec-title" style="margin-top:14px">⏳ صف ساخت اقتصادی</div>
+<div id="eco-queue" style="font-size:.75rem;color:var(--muted)">خالی</div>
+</div>
+</div>
+<div class="panel" id="panel-decl">
+<div class="panel-head"><h2>📢 بیانیه عمومی</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">بیانیه شما در کانال عمومی همه کشورها نمایش داده می‌شود.</div>
+<textarea class="decl-area" id="decl-text" placeholder="متن بیانیه رسمی خود را بنویسید..." maxlength="400"></textarea>
+<button class="abtn b-gold" onclick="sendDecl()">📢 انتشار بیانیه</button>
+<div class="sec-title" style="margin-top:16px">آخرین بیانیه‌ها</div>
+<div class="chatbox" id="decl-list" style="max-height:200px"></div>
+</div>
+</div>
+<div class="panel" id="panel-pchat">
+<div class="panel-head"><h2>💬 چت خصوصی — همه کشورها</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="sec-title">انتخاب مخاطب</div>
+<div class="priv-list" id="priv-list"></div>
+<div id="priv-chat-area" style="display:none">
+<div class="sec-title" id="priv-with">—</div>
+<div class="chatbox" id="priv-msgs" style="max-height:180px"></div>
+<div class="cinp"><input type="text" id="priv-input" placeholder="پیام خصوصی..." maxlength="200"><button onclick="sendPriv()">ارسال</button></div>
+</div>
+</div>
+</div>
+
+<div class="panel" id="panel-un">
+<div class="panel-head"><h2>🏛️ سازمان ملل</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div style="font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.5">تالار عمومی همه کشورها. ربات قاضی ⚖️ درباره اختلافات، آتش‌بس و قطعنامه‌ها نظر می‌دهد.</div>
+<div class="chatbox" id="un-chat" style="max-height:45vh;min-height:200px"></div>
+<div class="cinp" style="margin-top:8px">
+<input type="text" id="un-input" placeholder="پیام به سازمان ملل..." maxlength="220">
+<button onclick="sendUN()">ارسال</button>
+</div>
+<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+<button class="abtn b-gold" style="margin:0;flex:1" onclick="askJudge('ceasefire')">⚖️ درخواست نظر قاضی درباره آتش‌بس</button>
+<button class="abtn b-blue" style="margin:0;flex:1" onclick="askJudge('dispute')">⚖️ شکایت دیپلماتیک به قاضی</button>
+</div>
+</div>
+</div>
+
+<div class="panel" id="panel-rank">
+<div class="panel-head"><h2>🏆 رتبه‌بندی جهانی</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+<button class="htag" style="cursor:pointer;border:none;font-family:inherit;background:rgba(56,189,248,.15)" onclick="rRank('power')">⚔️ قدرت</button>
+<button class="htag" style="cursor:pointer;border:none;font-family:inherit" onclick="rRank('money')">💰 ثروت</button>
+<button class="htag" style="cursor:pointer;border:none;font-family:inherit" onclick="rRank('income')">📈 درآمد</button>
+<button class="htag" style="cursor:pointer;border:none;font-family:inherit" onclick="rRank('ally')">🤝 متحد</button>
+</div>
+<div id="rank-list"></div>
+</div>
+</div>
+<div class="panel" id="panel-spy">
+<div class="panel-head"><h2>🕵️ سازمان اطلاعات</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div style="font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.5">با هزینه، بخشی از اطلاعات نظامی دشمن فاش می‌شود. نتایج تا مدتی در پرونده می‌ماند.</div>
+<div class="sec-title">انتخاب هدف</div>
+<div class="clist" id="spy-targets" style="max-height:140px;margin-bottom:12px"></div>
+<div class="selbox" id="spy-sel">یک کشور انتخاب کنید</div>
+<button class="abtn b-purple" id="btn-spy1" onclick="doSpy('basic')">🔍 جاسوسی ساده — ۸۰M$</button>
+<button class="abtn b-gold" id="btn-spy2" onclick="doSpy('deep')">🛰️ جاسوسی عمیق — ۱۸۰M$</button>
+<div class="sec-title" style="margin-top:14px">📁 پرونده‌های اطلاعاتی</div>
+<div id="spy-files"><div style="color:var(--muted);font-size:.75rem">هنوز اطلاعاتی ندارید</div></div>
+</div>
+</div>
+
+<div class="panel" id="panel-weather">
+<div class="panel-head"><h2>🌤️ وضعیت هوا و میدان نبرد</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="wx-hero">
+  <div>
+    <div class="wn" id="wx-name">آسمان صاف</div>
+    <div class="we" id="wx-effect">بی‌اثر بر نبرد</div>
+    <div style="font-size:.75rem;color:var(--muted);margin-top:6px" id="wx-desc">—</div>
+  </div>
+  <div class="wi" id="wx-icon">☀️</div>
+</div>
+<div class="wx-grid">
+  <div class="wx-cell"><div class="v" id="wx-temp">28°</div><div class="l">دما</div></div>
+  <div class="wx-cell"><div class="v" id="wx-wind">8 km/h</div><div class="l">باد</div></div>
+  <div class="wx-cell"><div class="v" id="wx-rain">0 mm</div><div class="l">بارش</div></div>
+  <div class="wx-cell"><div class="v" id="wx-vis">20 km</div><div class="l">دید</div></div>
+</div>
+<div class="sec-title">آمادگی نیروها در شرایط فعلی</div>
+<div class="wx-ready">
+  <div class="rc"><div class="rl">🛡️ زمینی</div><div class="rv" id="wx-land">100%</div><div class="wx-bar"><i id="wx-land-bar" style="width:100%"></i></div></div>
+  <div class="rc"><div class="rl">✈️ هوایی</div><div class="rv" id="wx-air">100%</div><div class="wx-bar"><i id="wx-air-bar" style="width:100%"></i></div></div>
+  <div class="rc"><div class="rl">🚢 دریایی</div><div class="rv" id="wx-naval">100%</div><div class="wx-bar"><i id="wx-naval-bar" style="width:100%"></i></div></div>
+</div>
+<div class="sec-title" style="margin-top:14px">تعدیل اقتصادی و نظامی</div>
+<div class="sec-card" id="wx-mods" style="font-size:.8rem;line-height:1.6">—</div>
+<div style="margin-top:12px;font-size:.72rem;color:var(--muted);text-align:center">هوا هر از گاهی تغییر می‌کند و روی نبرد و درآمد اثر دارد</div>
+</div>
+</div>
+
+<div class="panel" id="panel-res">
+<div class="panel-head"><h2>📦 منابع استراتژیک</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="res-grid" id="res-overview"></div>
+<div class="res-tabs" id="res-tabs">
+<button class="on" onclick="setResTab('power')">⚡ برق</button>
+<button onclick="setResTab('oil')">🛢️ نفت</button>
+<button onclick="setResTab('steel')">⚙️ فولاد</button>
+<button onclick="setResTab('food')">🌾 غذا</button>
+<button onclick="setResTab('uranium')">☢️ اورانیوم</button>
+<button onclick="setResTab('boost')">🔧 تقویت‌ها</button>
+</div>
+<div id="res-detail"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-online">
+<div class="panel-head"><h2>🌐 حالت آنلاین</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="sec-card" style="margin-bottom:12px;font-size:.8rem;line-height:1.6">
+برای بازی چندنفره واقعی باید این فایل را روی اینترنت منتشر کنی و Firebase را وصل کنی.
+<br><br>
+<b>۱)</b> فایل را در <b>Netlify Drop</b> یا GitHub Pages آپلود کن<br>
+<b>۲)</b> یک پروژه رایگان در Firebase بساز (Realtime Database)<br>
+<b>۳)</b> مشخصات اتصال را پایین وارد کن
+</div>
+<div class="sec-title">اتصال Firebase</div>
+<input id="fb-api" placeholder="apiKey" style="width:100%;margin-bottom:6px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:#fff;font-family:inherit">
+<input id="fb-domain" placeholder="authDomain (xxx.firebaseapp.com)" style="width:100%;margin-bottom:6px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:#fff;font-family:inherit">
+<input id="fb-url" placeholder="databaseURL (https://xxx.firebaseio.com)" style="width:100%;margin-bottom:6px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:#fff;font-family:inherit">
+<input id="fb-project" placeholder="projectId" style="width:100%;margin-bottom:8px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:#fff;font-family:inherit">
+<button class="abtn b-blue" onclick="saveFbConfig()">💾 ذخیره تنظیمات Firebase</button>
+<div class="sec-title" style="margin-top:14px">اتاق بازی</div>
+<div style="display:flex;gap:8px;margin-bottom:8px">
+<input id="room-code" placeholder="کد اتاق (مثلاً WW2026)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:#fff;font-family:inherit">
+</div>
+<button class="abtn b-gold" onclick="createRoom()">🚀 ساخت اتاق جدید</button>
+<button class="abtn b-blue" onclick="joinRoom()">🔗 ورود به اتاق</button>
+<button class="abtn b-gray" onclick="leaveRoom()">خروج از اتاق</button>
+<div id="online-status" class="sec-card" style="margin-top:12px;font-size:.8rem;line-height:1.55">وضعیت: آفلاین (تک‌نفره)</div>
+<div id="online-players" style="margin-top:10px;font-size:.78rem;color:var(--muted)"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-inv">
+<div class="panel-head"><h2>📋 نیروها و دارایی‌ها</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div id="inv-body"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-strait">
+<div class="panel-head"><h2>🌊 تنگه‌ها و کانال‌ها</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body">
+<div class="sec-card" style="margin-bottom:12px;font-size:.82rem;line-height:1.55">
+قیمت جهانی نفت: <b id="oil-price-view" style="color:var(--gold)">100</b>
+<div style="color:var(--muted);font-size:.75rem;margin-top:4px">بستن تنگه‌های نفتی قیمت را بالا می‌برد. صاحب تنگه می‌تواند عوارض بگیرد یا مسیر را ببندد. دیگران می‌توانند حمله کنند.</div>
+</div>
+<div id="strait-list"></div>
+</div>
+</div>
+<div class="panel" id="panel-map">
+<div class="panel-head"><h2>🌍 نقشه جهان</h2><button class="panel-close" onclick="closePanel()">✕</button></div>
+<div class="panel-body" style="padding:0;display:flex;flex-direction:column;height:100%">
+<div style="padding:8px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(15,23,42,.95)">
+  <span class="htag blue" id="map-weather">☁️ —</span>
+  <button class="htag" style="cursor:pointer;border:none;font-family:inherit;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff" onclick="mapFlyPlayer()">📍 کشور من</button>
+  <button class="htag" style="cursor:pointer;border:none;font-family:inherit;background:rgba(56,189,248,.12)" onclick="setMapStyle('imagery')">🛰️ ماهواره</button>
+  <button class="htag" style="cursor:pointer;border:none;font-family:inherit" onclick="setMapStyle('street')">🛣️ مرزها</button>
+  <button class="htag" style="cursor:pointer;border:none;font-family:inherit" onclick="setMapStyle('osm')">🧭 OSM</button>
+</div>
+<div id="leaflet-map" style="flex:1;min-height:65vh;width:100%;background:radial-gradient(ellipse at center,#1e293b 0%,#0b1220 100%)"></div>
+<div id="map-sheet" style="display:none;border-top:1px solid rgba(56,189,248,.2);background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(8,12,20,.99));padding:14px 14px 18px;max-height:48%;overflow-y:auto;box-shadow:0 -8px 30px rgba(0,0,0,.45)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div id="sheet-title" style="font-weight:800;font-size:1rem">—</div>
+    <button onclick="closeMapSheet()" style="background:var(--card2);border:1px solid var(--border);color:#fff;width:32px;height:32px;border-radius:8px;font-size:1rem;cursor:pointer">✕</button>
+  </div>
+  <div id="sheet-body" style="font-size:.8rem;line-height:1.55;color:#cbd5e1"></div>
+  <div id="sheet-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"></div>
+</div>
+<div style="padding:6px 10px;font-size:.68rem;color:var(--muted);border-top:1px solid var(--border)">روی اسم شهر یا نزدیک آن بزنید</div>
+</div>
+</div>
+
+<div id="end"><h1 id="end-t">—</h1><p id="end-m"></p><button class="btn-go" onclick="location.reload()" style="max-width:230px">شروع مجدد</button></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const C={
+usa:{id:"usa",name:"ایالات متحده",flag:"🇺🇸",continent:"americas",money:1600,income:18,infantry:400,tanks:90,fighters:100,drones:33,destroyers:25,ships:50,industry:90,tech:1.12,color:"#1e40af",x:17,y:38,bg:"linear-gradient(135deg,#1e3a5f,#0f172a)"},
+canada:{id:"canada",name:"کانادا",flag:"🇨🇦",continent:"americas",money:420,income:6,infantry:85,tanks:16,fighters:20,drones:6,destroyers:5,ships:10,industry:40,tech:1.05,color:"#b91c1c",x:17,y:24,bg:"linear-gradient(135deg,#7f1d1d,#1c1917)"},
+brazil:{id:"brazil",name:"برزیل",flag:"🇧🇷",continent:"americas",money:280,income:5,infantry:170,tanks:22,fighters:18,drones:6,destroyers:4,ships:8,industry:35,tech:0.94,color:"#15803d",x:31,y:68,bg:"linear-gradient(135deg,#14532d,#0a1f14)"},
+mexico:{id:"mexico",name:"مکزیک",flag:"🇲🇽",continent:"americas",money:180,income:3.5,infantry:110,tanks:10,fighters:9,drones:5,destroyers:2,ships:5,industry:26,tech:0.9,color:"#166534",x:14,y:48,bg:"linear-gradient(135deg,#14532d,#1c1917)"},
+argentina:{id:"argentina",name:"آرژانتین",flag:"🇦🇷",continent:"americas",money:140,income:2.8,infantry:80,tanks:9,fighters:7,drones:5,destroyers:2,ships:4,industry:20,tech:0.9,color:"#1d4ed8",x:29,y:80,bg:"linear-gradient(135deg,#1e3a5f,#0f172a)"},
+uk:{id:"uk",name:"بریتانیا",flag:"🇬🇧",continent:"europe",money:480,income:7,infantry:100,tanks:25,fighters:42,drones:14,destroyers:13,ships:26,industry:52,tech:1.1,color:"#4c1d95",x:46,y:28,bg:"linear-gradient(135deg,#4c1d95,#1e1b4b)"},
+france:{id:"france",name:"فرانسه",flag:"🇫🇷",continent:"europe",money:450,income:6.5,infantry:120,tanks:30,fighters:38,drones:12,destroyers:10,ships:20,industry:50,tech:1.08,color:"#1e3a8a",x:47,y:36,bg:"linear-gradient(135deg,#1e3a8a,#0f172a)"},
+germany:{id:"germany",name:"آلمان",flag:"🇩🇪",continent:"europe",money:520,income:8,infantry:130,tanks:38,fighters:35,drones:11,destroyers:5,ships:11,industry:68,tech:1.1,color:"#374151",x:51,y:32,bg:"linear-gradient(135deg,#374151,#1c1917)"},
+russia:{id:"russia",name:"روسیه",flag:"🇷🇺",continent:"europe",money:380,income:6,infantry:360,tanks:110,fighters:65,drones:21,destroyers:16,ships:32,industry:45,tech:1.04,color:"#991b1b",x:64,y:25,bg:"linear-gradient(135deg,#7f1d1d,#1c1917)"},
+italy:{id:"italy",name:"ایتالیا",flag:"🇮🇹",continent:"europe",money:290,income:4.5,infantry:95,tanks:18,fighters:20,drones:6,destroyers:6,ships:13,industry:38,tech:1.0,color:"#166534",x:51,y:42,bg:"linear-gradient(135deg,#14532d,#0a1f14)"},
+poland:{id:"poland",name:"لهستان",flag:"🇵🇱",continent:"europe",money:160,income:3,infantry:90,tanks:20,fighters:14,drones:5,destroyers:2,ships:2,industry:28,tech:0.97,color:"#9f1239",x:54,y:30,bg:"linear-gradient(135deg,#9f1239,#1c1917)"},
+turkey:{id:"turkey",name:"ترکیه",flag:"🇹🇷",continent:"europe",money:220,income:4,infantry:150,tanks:28,fighters:22,drones:7,destroyers:5,ships:11,industry:32,tech:0.94,color:"#b91c1c",x:57,y:42,bg:"linear-gradient(135deg,#7f1d1d,#1e1b4b)"},
+spain:{id:"spain",name:"اسپانیا",flag:"🇪🇸",continent:"europe",money:240,income:3.8,infantry:85,tanks:14,fighters:16,drones:5,destroyers:4,ships:9,industry:30,tech:0.97,color:"#b45309",x:44,y:42,bg:"linear-gradient(135deg,#92400e,#1c1917)"},
+china:{id:"china",name:"چین",flag:"🇨🇳",continent:"asia",money:900,income:14,infantry:520,tanks:130,fighters:90,drones:30,destroyers:22,ships:45,industry:82,tech:1.07,color:"#9f1239",x:77,y:42,bg:"linear-gradient(135deg,#9f1239,#1c1917)"},
+india:{id:"india",name:"هند",flag:"🇮🇳",continent:"asia",money:380,income:6.5,infantry:460,tanks:65,fighters:42,drones:14,destroyers:10,ships:20,industry:42,tech:0.94,color:"#c2410c",x:69,y:52,bg:"linear-gradient(135deg,#9a3412,#1c1917)"},
+japan:{id:"japan",name:"ژاپن",flag:"🇯🇵",continent:"asia",money:540,income:7,infantry:90,tanks:20,fighters:52,drones:17,destroyers:15,ships:30,industry:70,tech:1.13,color:"#b91c1c",x:87,y:40,bg:"linear-gradient(135deg,#7f1d1d,#0f172a)"},
+skorea:{id:"skorea",name:"کره جنوبی",flag:"🇰🇷",continent:"asia",money:350,income:5,infantry:105,tanks:26,fighters:38,drones:12,destroyers:6,ships:13,industry:55,tech:1.09,color:"#1d4ed8",x:84,y:38,bg:"linear-gradient(135deg,#1e3a8a,#0f172a)"},
+iran:{id:"iran",name:"ایران",flag:"🇮🇷",continent:"asia",money:160,income:3.2,infantry:190,tanks:32,fighters:18,drones:6,destroyers:3,ships:7,industry:26,tech:0.91,color:"#14532d",x:61,y:48,bg:"linear-gradient(135deg,#14532d,#0a1f14)"},
+saudi:{id:"saudi",name:"عربستان",flag:"🇸🇦",continent:"asia",money:420,income:6.5,infantry:115,tanks:22,fighters:28,drones:9,destroyers:4,ships:9,industry:28,tech:0.94,color:"#166534",x:59,y:52,bg:"linear-gradient(135deg,#14532d,#1c1917)"},
+pakistan:{id:"pakistan",name:"پاکستان",flag:"🇵🇰",continent:"asia",money:85,income:2,infantry:210,tanks:38,fighters:16,drones:5,destroyers:2,ships:5,industry:18,tech:0.87,color:"#14532d",x:66,y:48,bg:"linear-gradient(135deg,#14532d,#0a1f14)"},
+indonesia:{id:"indonesia",name:"اندونزی",flag:"🇮🇩",continent:"asia",money:200,income:3.5,infantry:150,tanks:11,fighters:14,drones:5,destroyers:5,ships:11,industry:26,tech:0.89,color:"#b91c1c",x:81,y:65,bg:"linear-gradient(135deg,#7f1d1d,#1c1917)"},
+egypt:{id:"egypt",name:"مصر",flag:"🇪🇬",continent:"africa",money:125,income:2.5,infantry:170,tanks:28,fighters:16,drones:5,destroyers:3,ships:7,industry:20,tech:0.87,color:"#b45309",x:55,y:50,bg:"linear-gradient(135deg,#92400e,#1c1917)"},
+nigeria:{id:"nigeria",name:"نیجریه",flag:"🇳🇬",continent:"africa",money:95,income:2.2,infantry:120,tanks:7,fighters:5,drones:5,destroyers:2,ships:3,industry:16,tech:0.84,color:"#166534",x:49,y:58,bg:"linear-gradient(135deg,#14532d,#0a1f14)"},
+southafrica:{id:"southafrica",name:"آفریقای جنوبی",flag:"🇿🇦",continent:"africa",money:115,income:2.2,infantry:65,tanks:11,fighters:9,drones:5,destroyers:2,ships:4,industry:23,tech:0.91,color:"#1e3a8a",x:54,y:78,bg:"linear-gradient(135deg,#1e3a8a,#0f172a)"},
+algeria:{id:"algeria",name:"الجزایر",flag:"🇩🇿",continent:"africa",money:90,income:2,infantry:100,tanks:14,fighters:11,drones:5,destroyers:2,ships:3,industry:16,tech:0.86,color:"#14532d",x:47,y:48,bg:"linear-gradient(135deg,#14532d,#0a1f14)"},
+australia:{id:"australia",name:"استرالیا",flag:"🇦🇺",continent:"oceania",money:310,income:4.5,infantry:65,tanks:11,fighters:26,drones:8,destroyers:8,ships:16,industry:38,tech:1.07,color:"#1e3a8a",x:87,y:75,bg:"linear-gradient(135deg,#1e3a8a,#0f172a)"}
+};
+
+
+const POP={
+usa:331,canada:38,brazil:214,mexico:128,argentina:46,
+uk:67,france:68,germany:83,russia:143,italy:59,poland:38,turkey:85,spain:47,
+china:1412,india:1408,japan:125,skorea:52,iran:89,saudi:36,pakistan:231,indonesia:276,
+egypt:109,nigeria:218,southafrica:60,algeria:45,australia:26
+};
+const STRAT_INFO={
+hormuz:{title:"تنگه هرمز",desc:"شریان اصلی صادرات نفت جهان. کنترل آن درآمد نفتی و فشار ژئوپلیتیک می‌دهد.",bonus:"+۸M$ درآمد"},
+suez:{title:"کانال سوئز",desc:"میانبر حیاتی بین آسیا و اروپاست. کنترل تجارت دریایی را تقویت می‌کند.",bonus:"+۶M$ درآمد"},
+panama:{title:"کانال پاناما",desc:"اتصال اقیانوس آرام و اطلس. مسیر تجاری نیمکره غربی.",bonus:"+۵M$ درآمد"},
+malacca:{title:"تنگه مالاکا",desc:"شلوغ‌ترین مسیر کشتیرانی آسیا بین اقیانوس هند و آرام.",bonus:"+۵M$ درآمد"},
+gibraltar:{title:"جبل‌الطارق",desc:"دروازه مدیترانه به اقیانوس اطلس. ارزش نظامی و تجاری بالا.",bonus:"+۳M$ درآمد"},
+bab:{title:"باب‌المندب",desc:"ورودی دریای سرخ و مسیر نزدیک به سوئز. نقطه فشار استراتژیک.",bonus:"+۴M$ درآمد"}
+};
+const GEO={
+usa:{lat:38.9,lng:-77.0},canada:{lat:45.4,lng:-75.7},brazil:{lat:-15.8,lng:-47.9},mexico:{lat:19.4,lng:-99.1},argentina:{lat:-34.6,lng:-58.4},
+uk:{lat:51.5,lng:-0.12},france:{lat:48.9,lng:2.35},germany:{lat:52.5,lng:13.4},russia:{lat:55.75,lng:37.62},italy:{lat:41.9,lng:12.5},
+poland:{lat:52.2,lng:21.0},turkey:{lat:39.93,lng:32.86},spain:{lat:40.4,lng:-3.7},
+china:{lat:39.9,lng:116.4},india:{lat:28.6,lng:77.2},japan:{lat:35.68,lng:139.65},skorea:{lat:37.57,lng:126.98},
+iran:{lat:35.69,lng:51.39},saudi:{lat:24.7,lng:46.7},pakistan:{lat:33.7,lng:73.1},indonesia:{lat:-6.2,lng:106.8},
+egypt:{lat:30.04,lng:31.24},nigeria:{lat:9.08,lng:7.4},southafrica:{lat:-25.7,lng:28.2},algeria:{lat:36.75,lng:3.06},australia:{lat:-35.3,lng:149.1}
+};
+const CITY_GEO={
+usa:[["واشنگتن",38.9,-77.0],["نیویورک",40.7,-74.0],["لس‌آنجلس",34.05,-118.2]],
+canada:[["اتاوا",45.4,-75.7],["تورنتو",43.7,-79.4]],
+brazil:[["برازیلیا",-15.8,-47.9],["سائوپائولو",-23.5,-46.6]],
+mexico:[["مکزیکوسیتی",19.4,-99.1]],
+argentina:[["بوئنوس‌آیرس",-34.6,-58.4]],
+uk:[["لندن",51.5,-0.12],["منچستر",53.5,-2.2]],
+france:[["پاریس",48.9,2.35],["مارسی",43.3,5.4]],
+germany:[["برلین",52.5,13.4],["مونیخ",48.1,11.6]],
+russia:[["مسکو",55.75,37.62],["سن‌پترزبورگ",59.9,30.3]],
+italy:[["رم",41.9,12.5],["میلان",45.5,9.2]],
+poland:[["ورشو",52.2,21.0]],
+turkey:[["آنکارا",39.93,32.86],["استانبول",41.0,28.98]],
+spain:[["مادرید",40.4,-3.7],["بارسلونا",41.4,2.17]],
+china:[["پکن",39.9,116.4],["شانگهای",31.2,121.5]],
+india:[["دهلی‌نو",28.6,77.2],["مومبای",19.1,72.9]],
+japan:[["توکیو",35.68,139.65],["اوساکا",34.7,135.5]],
+skorea:[["سئول",37.57,126.98]],
+iran:[["تهران",35.69,51.39],["مشهد",36.3,59.6],["اصفهان",32.7,51.7]],
+saudi:[["ریاض",24.7,46.7],["جده",21.5,39.2]],
+pakistan:[["اسلام‌آباد",33.7,73.1],["کراچی",24.9,67.0]],
+indonesia:[["جاکارتا",-6.2,106.8]],
+egypt:[["قاهره",30.04,31.24],["اسکندریه",31.2,29.9]],
+nigeria:[["آبوجا",9.08,7.4],["لاگوس",6.5,3.4]],
+southafrica:[["پرتوریا",-25.7,28.2],["کیپ‌تاون",-33.9,18.4]],
+algeria:[["الجزیره",36.75,3.06]],
+australia:[["کانبرا",-35.3,149.1],["سیدنی",-33.9,151.2]]
+};
+let leafletMap=null, mapLayers=[];
+const CITIES={"usa": ["واشنگتن", "نیویورک", "لس\u200cآنجلس", "شیکاگو", "هیوستون"], "canada": ["اتاوا", "تورنتو", "ونکوور", "مونترال"], "brazil": ["برازیلیا", "سائوپائولو", "ریودوژانیرو", "سالوادور"], "mexico": ["مکزیکوسیتی", "گوادالاخارا", "مونتری"], "argentina": ["بوئنوس\u200cآیرس", "کوردوبا", "روساریو"], "uk": ["لندن", "منچستر", "بیرمنگام", "ادینبرو"], "france": ["پاریس", "مارسی", "لیون", "تولوز"], "germany": ["برلین", "مونیخ", "هامبورگ", "فرانکفورت"], "russia": ["مسکو", "سن\u200cپترزبورگ", "نووسیبیرسک", "کازان"], "italy": ["رم", "میلان", "ناپل", "تورین"], "poland": ["ورشو", "کراکوف", "گدانسک"], "turkey": ["آنکارا", "استانبول", "ازمیر", "آنتالیا"], "spain": ["مادرید", "بارسلونا", "والنسیا", "سویل"], "china": ["پکن", "شانگهای", "گوانگژو", "شنژن", "چنگدو"], "india": ["دهلی\u200cنو", "مومبای", "بنگلور", "کلکته"], "japan": ["توکیو", "اوساکا", "یوکوهاما", "ناگویا"], "skorea": ["سئول", "بوسان", "اینچئون"], "iran": ["تهران", "مشهد", "اصفهان", "شیراز", "تبریز"], "saudi": ["ریاض", "جده", "مکه", "دمام"], "pakistan": ["اسلام\u200cآباد", "کراچی", "لاهور"], "indonesia": ["جاکارتا", "سورابایا", "باندونگ"], "egypt": ["قاهره", "اسکندریه", "جیزه"], "nigeria": ["آبوجا", "لاگوس", "کانو"], "southafrica": ["پرتوریا", "کیپ\u200cتاون", "ژوهانسبورگ"], "algeria": ["الجزیره", "وهران", "قسنطینه"], "australia": ["کانبرا", "سیدنی", "ملبورن", "بریزبین"]};
+const STRAT=[
+{id:"hormuz",name:"تنگه هرمز",x:62,y:51,owner:"iran",bonus:8,icon:"🛢️",open:true,toll:0,oilImpact:0.25},
+{id:"suez",name:"کانال سوئز",x:56,y:49,owner:"egypt",bonus:6,icon:"⚓",open:true,toll:0,oilImpact:0.12},
+{id:"panama",name:"کانال پاناما",x:22,y:55,owner:"usa",bonus:5,icon:"🚢",open:true,toll:0,oilImpact:0.06},
+{id:"malacca",name:"تنگه مالاکا",x:78,y:58,owner:"indonesia",bonus:5,icon:"🌊",open:true,toll:0,oilImpact:0.1},
+{id:"gibraltar",name:"جبل‌الطارق",x:48,y:42,owner:"uk",bonus:3,icon:"🪨",open:true,toll:0,oilImpact:0.04},
+{id:"bab",name:"باب‌المندب",x:58,y:56,owner:"saudi",bonus:4,icon:"🌊",open:true,toll:0,oilImpact:0.08}
+];
+const WEATHERS=[
+{id:"sunny",name:"آسمان صاف",icon:"☀️",incMod:1.05,milMod:1.0,land:100,air:100,naval:100,temp:28,wind:8,rain:0,vis:20,effect:"بی‌اثر بر نبرد",desc:"درآمد +۵٪ · دید عالی"},
+{id:"cloudy",name:"ابری",icon:"☁️",incMod:1.0,milMod:1.0,land:100,air:95,naval:100,temp:18,wind:12,rain:0,vis:12,effect:"هوایی کمی محدود",desc:"بدون تأثیر اقتصادی خاص"},
+{id:"rain",name:"بارانی",icon:"🌧️",incMod:0.92,milMod:0.95,land:90,air:85,naval:95,temp:14,wind:18,rain:12,vis:6,effect:"زمین و هوا ضعیف‌تر",desc:"درآمد −۸٪ · قدرت −۵٪"},
+{id:"storm",name:"طوفانی",icon:"⛈️",incMod:0.85,milMod:0.9,land:80,air:70,naval:75,temp:11,wind:42,rain:28,vis:3,effect:"نبرد پرریسک",desc:"درآمد −۱۵٪ · قدرت −۱۰٪"},
+{id:"snow",name:"برفی",icon:"❄️",incMod:0.88,milMod:0.92,land:75,air:80,naval:90,temp:-4,wind:15,rain:5,vis:5,effect:"تحرک زمینی سخت",desc:"درآمد −۱۲٪ · قدرت −۸٪"},
+{id:"heat",name:"موج گرما",icon:"🔥",incMod:0.9,milMod:0.94,land:85,air:90,naval:100,temp:41,wind:10,rain:0,vis:14,effect:"خستگی نیروها",desc:"درآمد −۱۰٪ · قدرت −۶٪"},
+{id:"fog",name:"مه‌آلود",icon:"🌫️",incMod:0.96,milMod:0.93,land:95,air:75,naval:90,temp:10,wind:5,rain:1,vis:2,effect:"دید بسیار کم",desc:"عملیات هوایی پرخطر"},
+{id:"sand",name:"طوفان شن",icon:"🏜️",incMod:0.87,milMod:0.88,land:70,air:60,naval:95,temp:36,wind:35,rain:0,vis:1.5,effect:"تجهیزات آسیب‌پذیر",desc:"درآمد −۱۳٪ · قدرت −۱۲٪"}
+];
+const REL={};Object.keys(C).forEach(a=>{REL[a]={};Object.keys(C).forEach(b=>{if(a!==b)REL[a][b]="peace"})});
+const both=(a,b,r)=>{REL[a][b]=r;REL[b][a]=r};
+["usa","uk","france","germany","italy","poland","spain","canada","turkey"].forEach((a,i,arr)=>arr.forEach(b=>{if(a!==b)both(a,b,"ally")}));
+both("usa","japan","ally");both("usa","skorea","ally");both("usa","australia","ally");both("uk","australia","ally");
+both("china","russia","ally");both("china","pakistan","ally");both("russia","iran","ally");both("saudi","egypt","ally");
+
+let S={player:null,year:2026,season:0,weather:1,selected:null,privTarget:null,countries:{},relations:{},strat:[],queue:[],requests:[],log:[],chat:[],decls:[],pms:{},filter:"all",started:false};
+
+const SAVE_KEY="ww2026_save_v3";
+const SAVE_KEY_BAK="ww2026_save_v3_bak";
+function buildSavePayload(){
+  const q=(S.queue||[]).map(i=>({icon:i.icon,label:i.label,start:i.start,duration:i.duration,type:i.type||null}));
+  return {
+    v:3,
+    player:S.player,
+    year:S.year,season:S.season,weather:S.weather,
+    countries:S.countries,
+    relations:S.relations,
+    strat:S.strat,
+    queue:q,
+    requests:S.requests||[],
+    news:(S.news||[]).slice(0,30),
+      unChat:(S.unChat||[]).slice(-80),
+      notifs:(S.notifs||[]).slice(0,40),
+      intel:S.intel||{},
+      currentEvent:S.currentEvent||null,
+      oilPrice:S.oilPrice||100,
+    decls:(S.decls||[]).slice(0,20),
+    ceasefireEnd:S.ceasefireEnd||0,
+    battlePending:false,
+    pendingForce:null,
+    ts:Date.now()
+  };
+}
+function loadSave(){
+  try{
+    let raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) raw=localStorage.getItem(SAVE_KEY_BAK);
+    if(!raw) return null;
+    const data=JSON.parse(raw);
+    if(!data||!data.player) return null;
+    return data;
+  }catch(e){console.error(e);return null}
+}
+function writeSave(silent){
+  if(!S.started||!S.player)return false;
+  try{
+    const data=buildSavePayload();
+    const str=JSON.stringify(data);
+    localStorage.setItem(SAVE_KEY,str);
+    localStorage.setItem(SAVE_KEY_BAK,str);
+    // verify
+    const check=localStorage.getItem(SAVE_KEY);
+    if(!check){throw new Error("write empty")}
+    const parsed=JSON.parse(check);
+    if(parsed.player!==S.player)throw new Error("verify fail");
+    const money=S.countries[S.player]?.money;
+    if(!silent) toast("💾 ذخیره شد — موجودی: "+fmt(money)+"M$");
+    const el=$("save-status");
+    if(el) el.textContent="💾 "+new Date().toLocaleTimeString("fa-IR");
+    return true;
+  }catch(e){
+    console.error("save fail",e);
+    // فقط وقتی کاربر خودش ذخیره را زده باشد اخطار نشان بده
+    if(!silent){
+      toast("⚠️ ذخیره در مرورگر ممکن نشد — از خروجی فایل استفاده کن");
+    }
+    return false;
+  }
+}
+function clearSave(){
+  try{localStorage.removeItem(SAVE_KEY);localStorage.removeItem(SAVE_KEY_BAK)}catch(e){}
+}
+function exportSave(){
+  if(!S.started||!S.player){toast("اول وارد بازی شو");return}
+  const data=buildSavePayload();
+  const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="ww2026_"+S.player+"_save.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("فایل ذخیره دانلود شد — نگهش دار");
+}
+function importSaveFile(file){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data||!data.player||!data.countries){alert("فایل نامعتبر است");return}
+      localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+      localStorage.setItem(SAVE_KEY_BAK,JSON.stringify(data));
+      alert("ذخیره بارگذاری شد. صفحه رفرش می‌شود.");
+      location.reload();
+    }catch(e){alert("خواندن فایل شکست خورد")}
+  };
+  reader.readAsText(file);
+}
+function formatRemain(ms){
+  if(ms<=0)return "00:00:00";
+  const s=Math.floor(ms/1000);
+  const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  const pad=n=>String(n).padStart(2,"0");
+  if(d>0)return d+"ر "+pad(h)+":"+pad(m)+":"+pad(sec);
+  return pad(h)+":"+pad(m)+":"+pad(sec);
+}
+function updateTimers(){
+  const tag=$("htag-cease");
+  if(S.ceasefireEnd){
+    const left=S.ceasefireEnd-Date.now();
+    if(left>0){
+      if(tag)tag.textContent="⚡ آتش‌بس: "+formatRemain(left);
+      S.globalCeasefire=true;
+    } else {
+      if(tag){tag.textContent="⚔️ آتش‌بس پایان یافت";tag.classList.remove("gold");tag.classList.add("red")}
+      if(S.globalCeasefire){S.globalCeasefire=false;news("🚨 آتش‌بس یک‌هفته‌ای پایان یافت — وضعیت جنگی آزاد شد");log("آتش‌بس جهانی به پایان رسید.","war")}
+    }
+  }
+  writeSave(true);
+}
+const SEASONS=["بهار","تابستان","پاییز","زمستان"];
+const $=id=>document.getElementById(id);
+function toast(msg){const t=$("toast");if(!t){console.log("toast",msg);return;}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500)}
+
+function news(msg){if(!S.news)S.news=[];S.notifs=[];S.intel={};S.currentEvent=null;S.rankMode="power";S.battlePending=false;S.news.unshift({msg,t:Date.now()});if(S.news.length>40)S.news.pop();rNews();log(msg,"imp")}
+function rNews(){const b=$("newsbox");if(!b)return;b.innerHTML=(S.news||[]).slice(0,20).map(n=>`<div class="e imp">📰 ${n.msg}</div>`).join("")||'<div style="color:var(--muted)">هنوز خبری نیست</div>'}
+function log(m,t=""){S.log.unshift({msg:m,type:t});if(S.log.length>40)S.log.pop();rLog();if(t==="war"||t==="ok"||t==="dip"||t==="imp") notify(m,t,{silent:true})}
+function notify(msg,type="imp",opts){
+  if(!S.notifs) S.notifs=[];
+  if(opts&&opts.skipDup&&S.notifs[0]&&S.notifs[0].msg===msg) return;
+  S.notifs.unshift({msg,type,time:Date.now(),read:false});
+  if(S.notifs.length>50) S.notifs.pop();
+  rNotifs();
+  if(!opts||!opts.silent){
+    if(type==="war"||type==="ok"||type==="dip"||type==="imp")
+      toast(msg.length>48?msg.slice(0,48)+"…":msg);
+  }
+}
+function rNotifs(){
+  const list=$("notif-list"), badge=$("notif-badge");
+  if(!S.notifs) S.notifs=[];
+  const unread=S.notifs.filter(n=>!n.read).length;
+  if(badge){
+    if(unread>0){badge.style.display="flex";badge.textContent=unread>9?"9+":String(unread)}
+    else badge.style.display="none";
+  }
+  if(!list)return;
+  if(!S.notifs.length){list.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.8rem">اعلانی نیست</div>';return}
+  list.innerHTML=S.notifs.map((n,i)=>{
+    const ago=formatNotifTime(n.time);
+    return `<div class="nitem ${n.type||""} ${n.read?"":"unread"}" onclick="readNotif(${i})">${n.msg}<div class="nt">${ago}</div></div>`;
+  }).join("");
+}
+function formatNotifTime(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return "همین الان";
+  if(s<3600) return Math.floor(s/60)+" دقیقه پیش";
+  if(s<86400) return Math.floor(s/3600)+" ساعت پیش";
+  return new Date(ts).toLocaleString("fa-IR");
+}
+function toggleNotif(force){
+  const p=$("notif-panel"); if(!p)return;
+  const open = force===false ? false : (force===true ? true : !p.classList.contains("show"));
+  p.classList.toggle("show", open);
+  if(open){
+    (S.notifs||[]).forEach(n=>n.read=true);
+    rNotifs();
+  }
+}
+function readNotif(i){ if(S.notifs&&S.notifs[i]){S.notifs[i].read=true;rNotifs()} }
+function clearNotifs(){ S.notifs=[]; rNotifs(); }
+
+function chatAdd(f,t,ty=""){S.chat.push({from:f,text:t,type:ty});if(S.chat.length>60)S.chat.shift();rChat()}
+function getRel(a,b){if(a===b)return"self";return S.relations[a]?.[b]||"peace"}
+function setRel(a,b,r){S.relations[a][b]=r;S.relations[b][a]=r}
+function isAlive(id){const c=S.countries[id];return c&&(c.infantry+c.tanks*3+c.fighters*2+(c.drones||0)*1.5+(c.destroyers||0)*3+c.ships*5)>12&&c.money>-200}
+function alive(){return Object.keys(S.countries).filter(isAlive)}
+function fmt(n){return Math.floor(n).toLocaleString("fa-IR")}
+function power(c){const w=WEATHERS[S.weather];return Math.floor((c.infantry+c.tanks*4.5+c.fighters*5.5+(c.drones||0)*3.2+(c.destroyers||0)*5.5+c.ships*8+c.industry*1.5)*(c.tech||1)*(w.milMod||1))}
+function incomeOf(c){const w=WEATHERS[S.weather];let i=c.income;
+  (S.strat||[]).forEach(s=>{if(s.owner===c.id){i+=s.bonus; if(!s.open)i+=Math.floor(s.bonus*0.5)}});
+  // oil price affects oil field income
+  const oilLv=(c.eco&&c.eco.oil)||0;
+  if(oilLv>0){const pf=(S.oilPrice||100)/100; i+=oilLv*2*pf}
+  return i*(w.incMod||1)}
+function w(){return WEATHERS[S.weather]}
+
+function runLoad(){
+  const steps=["بارگذاری موتور استراتژیک...","همگام‌سازی نقشه جهان...","بارگذاری داده‌های کشورها...","سامانه دیپلماسی...","اقتصاد و بازار جهانی...","نیروهای هوایی و دریایی...","خبرگزاری جهانی...","آماده‌سازی اتاق جنگ..."];
+  let p=0,si=0;const b=$("lbar"),x=$("lpct"),s=$("lstep");
+  function finishLoad(){
+    try{
+      const ld=$("loading"); if(ld){ ld.classList.add("hide"); ld.style.display="none"; ld.style.pointerEvents="none"; }
+      const st=$("start"); if(st){ st.style.display="flex"; }
+      bindStartBtn();
+      rStart();
+    }catch(e){console.error(e)}
+  }
+  const iv=setInterval(()=>{
+    p+=Math.random()*12+5;
+    if(p>=(si+1)*(100/steps.length) && si<steps.length-1){si++;if(s)s.textContent=steps[si]}
+    if(p>=100){
+      p=100;clearInterval(iv);
+      if(s)s.textContent="ورود به سامانه...";
+      if(b)b.style.width="100%";
+      if(x)x.textContent="100٪";
+      setTimeout(finishLoad, 250);
+      return;
+    }
+    if(b)b.style.width=p+"%";
+    if(x)x.textContent=Math.floor(p)+"٪";
+  },50);
+  // safety: never stuck on loading
+  setTimeout(finishLoad, 5000);
+}
+function rStart(){const g=$("cgrid");g.innerHTML="";Object.values(C).forEach(c=>{if(S.filter!=="all"&&c.continent!==S.filter)return;const d=document.createElement("div");d.className="ccard"+(S.player===c.id?" sel":"");d.setAttribute("data-id",c.id);d.innerHTML=`<span class="f">${c.flag}</span><div class="n">${c.name}</div>`;d.onclick=()=>{S.player=c.id;document.querySelectorAll(".ccard").forEach(e=>e.classList.remove("sel"));d.classList.add("sel");const b=$("btn-go");if(b){b.disabled=false;b.onclick=function(){startGame();}}};g.appendChild(d)})}
+document.querySelectorAll(".tab").forEach(t=>{t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");S.filter=t.dataset.c;rStart()}});
+
+function rHero(){
+  const p=S.countries[S.player];const ww=w();
+  $("tflag").textContent=p.flag;$("tname").textContent=p.name;
+  $("tmoney").textContent=fmt(p.money);$("tincome").textContent=fmt(incomeOf(p));
+  $("hname").innerHTML=p.flag+" "+p.name;
+  $("hmoney").textContent="$"+fmt(p.money)+"M";
+  $("hincome").textContent="درآمد: "+fmt(incomeOf(p))+"M$ / تیک";
+  $("hpow").textContent=fmt(power(p));
+  $("hinf").textContent=fmt(p.infantry);$("htank").textContent=fmt(p.tanks);
+  $("hfig").textContent=fmt(p.fighters);if($("hdrone"))$("hdrone").textContent=fmt(p.drones||0);$("hship").textContent=fmt(p.ships);if($("hdes"))$("hdes").textContent=fmt(p.destroyers||0);
+  $("htag-year").textContent="سال "+S.year;$("htag-season").textContent=SEASONS[S.season];
+  $("htag-weather").textContent=ww.icon+" "+ww.name;
+  $("hero-bg").style.background=p.bg;
+  $("w-icon").textContent=ww.icon;$("w-name").textContent=ww.name;$("w-eff").textContent=ww.desc;
+}
+function rList(){
+  const l=$("clist");l.innerHTML="";
+  Object.values(S.countries).sort((a,b)=>power(b)-power(a)).forEach(c=>{
+    const r=document.createElement("div");r.className="crow"+(S.selected===c.id?" sel":"");
+    const rel=getRel(S.player,c.id);
+    let rt="صلح",rc="r-peace";
+    if(rel==="war"){rt="جنگ";rc="r-war"}else if(rel==="ally"){rt="متحد";rc="r-ally"}
+    else if(rel==="nap"){rt="عدم‌تجاوز";rc="r-nap"}else if(rel==="self"){rt="شما";rc="r-self"}
+    if(!isAlive(c.id)){rt="سقوط";rc="r-war"}
+    if(S.requests.some(q=>q.to===c.id&&q.from===S.player)){rt="در انتظار";rc="r-pending"}
+    r.innerHTML=`<span>${c.flag}</span><span>${c.name}</span><span class="rel ${rc}">${rt}</span>`;
+    r.onclick=()=>select(c.id);l.appendChild(r);
+  });
+}
+function rSel(){
+  const box=$("selbox"),ws=$("war-sel"),ds=$("dip-sel");
+  if(!S.selected){const e="از لیست زیر یک کشور انتخاب کنید";box.innerHTML=e;ws.innerHTML=e;ds.innerHTML=e;rTargetLists();return}
+  const c=S.countries[S.selected];const rel=getRel(S.player,c.id);
+  let rt="صلح";if(rel==="war")rt="در حال جنگ";else if(rel==="ally")rt="متحد نظامی";else if(rel==="nap")rt="پیمان عدم تجاوز";else if(rel==="self")rt="کشور شما";
+  const ow=S.strat.filter(s=>s.owner===c.id).map(s=>s.icon+" "+s.name).join(" · ")||"—";
+  const isSelf=c.id===S.player;
+  let html="";
+  if(isSelf){
+    html=`<strong style="font-size:1rem">${c.flag} ${c.name}</strong>
+    <div class="detail-grid">
+      <div class="ditem"><div class="dv">${fmt(power(c))}</div><div class="dl">⚔️ قدرت</div></div>
+      <div class="ditem"><div class="dv">${fmt(c.money)}M$</div><div class="dl">💰 خزانه</div></div>
+      <div class="ditem"><div class="dv">${fmt(c.infantry)}</div><div class="dl">🪖 پیاده</div></div>
+      <div class="ditem"><div class="dv">${fmt(c.tanks)}</div><div class="dl">🛡️ تانک</div></div>
+      <div class="ditem"><div class="dv">${fmt(c.fighters)}</div><div class="dl">✈️ جنگنده</div></div>
+      <div class="ditem"><div class="dv">${fmt(c.drones||0)}</div><div class="dl">🛸 پهپاد</div></div>
+      <div class="ditem"><div class="dv">${fmt(c.destroyers||0)}</div><div class="dl">⚓ ناوشکن</div></div>
+      <div class="ditem"><div class="dv">${fmt(c.ships)}</div><div class="dl">🚢 ناو</div></div>
+    </div>
+    <div style="margin-top:8px;font-size:.72rem">نقاط استراتژیک: ${ow}</div>
+    <div style="margin-top:4px">وضعیت: <strong>${rt}</strong></div>`;
+  } else {
+    // FOG OF WAR — no power / unit counts for enemies
+    const file=(S.intel&&S.intel[c.id]&&S.intel[c.id].until>Date.now())?S.intel[c.id]:null;
+    const intel = rel==="ally" ? "متحد — اطلاعات محدود" : (rel==="war" ? "دشمن — اطلاعات طبقه‌بندی‌شده" : "اطلاعات محرمانه");
+    if(file){
+      html=`<strong style="font-size:1rem">${c.flag} ${c.name}</strong>
+      <div style="margin-top:8px;padding:10px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px">
+        <div style="font-weight:700;color:var(--gold);margin-bottom:4px">🕵️ پرونده اطلاعاتی</div>
+        <div>⚔️ قدرت تقریبی: ${fmt(file.power)}</div>
+        <div>💰 خزانه تقریبی: ${fmt(file.money)}M$</div>
+        ${file.deep?`<div>🪖 ${fmt(file.infantry)} · 🛡️ ${fmt(file.tanks)} · ✈️ ${fmt(file.fighters)}</div>`:""}
+      </div>
+      <div style="margin-top:10px;font-size:.75rem">نقاط استراتژیک شناخته‌شده: ${ow}</div>
+      <div style="margin-top:4px">وضعیت دیپلماتیک: <strong>${rt}</strong></div>`;
+    } else {
+      html=`<strong style="font-size:1rem">${c.flag} ${c.name}</strong>
+      <div style="margin-top:10px;padding:12px;background:rgba(0,0,0,.25);border-radius:10px;text-align:center">
+        <div style="font-size:1.4rem;margin-bottom:6px">🔒</div>
+        <div style="font-size:.8rem;color:var(--muted)">${intel}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:6px">قدرت نظامی مخفی است — از پنل جاسوسی استفاده کنید</div>
+      </div>
+      <div style="margin-top:10px;font-size:.75rem">نقاط استراتژیک شناخته‌شده: ${ow}</div>
+      <div style="margin-top:4px">وضعیت دیپلماتیک: <strong>${rt}</strong></div>`;
+    }
+  }
+  box.innerHTML=html;ws.innerHTML=html;ds.innerHTML=html;
+  rTargetLists();rAttackPlanner();
+}
+function rReqs(){
+  const sec=$("req-sec"),list=$("req-list");
+  const mine=S.requests.filter(r=>r.to===S.player);
+  if(!mine.length){sec.style.display="none";return}
+  sec.style.display="block";
+  const labels={ally:"درخواست اتحاد نظامی",nap:"پیمان عدم تجاوز",peace:"پیشنهاد آتش‌بس"};
+  list.innerHTML=mine.map((r,i)=>{
+    const from=S.countries[r.from];
+    return`<div class="req-card"><div class="rt">${from.flag} ${from.name}</div><div class="rd">${labels[r.type]||r.type}</div>
+    <div class="req-acts"><button class="req-ok" onclick="respondReq(${i},true)">قبول ✓</button><button class="req-no" onclick="respondReq(${i},false)">رد ✕</button></div></div>`;
+  }).join("");
+}
+function rQueue(){const q=$("queue");if(!S.queue.length){q.innerHTML='<div style="color:var(--muted);font-size:.72rem">خالی</div>';return}q.innerHTML=S.queue.map(i=>{const p=Math.min(100,((Date.now()-i.start)/i.duration)*100);return`<div class="qitem"><div style="display:flex;justify-content:space-between"><span>${i.icon} ${i.label}</span><span>${Math.ceil((i.duration-(Date.now()-i.start))/1000)}ث</span></div><div class="qbar"><div class="qfill" style="width:${p}%"></div></div></div>`}).join("")}
+function rLog(){$("elog").innerHTML=S.log.slice(0,12).map(l=>`<div class="e ${l.type}">${l.msg}</div>`).join("")}
+function rChat(){const b=$("chatbox");b.innerHTML=S.chat.map(m=>m.type==="system"?`<div class="cmsg sys">${m.text}</div>`:`<div class="cmsg ${m.type||""}"><div class="fr">${m.from}</div>${m.text}</div>`).join("");b.scrollTop=b.scrollHeight}
+function rDecls(){const b=$("decl-list");if(!b)return;b.innerHTML=S.decls.slice(0,15).map(d=>`<div class="cmsg dip"><div class="fr">📢 ${d.from}</div>${d.text}</div>`).join("")||'<div style="color:var(--muted);font-size:.72rem">هنوز بیانیه‌ای صادر نشده</div>'}
+function rPrivList(){
+  const l=$("priv-list");if(!l)return;
+  l.innerHTML=Object.keys(S.countries).filter(id=>id!==S.player).map(id=>{
+    const c=S.countries[id];
+    const key=[S.player,id].sort().join("_");
+    const msgs=S.pms[key]||[];
+    const unread=msgs.filter(m=>m.to===S.player&&!m.read).length;
+    const dead=!isAlive(id);
+    return`<div class="priv-item ${S.privTarget===id?"active":""}" onclick="openPriv('${id}')" style="${dead?"opacity:.55":""}"><span>${c.flag}</span><span>${c.name}${dead?" (سقوط)":""}</span>${unread?`<span class="unread">${unread}</span>`:""}</div>`;
+  }).join("");
+}
+function rPrivMsgs(){
+  if(!S.privTarget)return;
+  const key=[S.player,S.privTarget].sort().join("_");
+  const msgs=S.pms[key]||[];
+  msgs.forEach(m=>{if(m.to===S.player)m.read=true});
+  const b=$("priv-msgs");
+  b.innerHTML=msgs.map(m=>`<div class="cmsg priv"><div class="fr">${m.from===S.player?"شما":S.countries[m.from].flag}</div>${m.text}</div>`).join("")||'<div style="color:var(--muted);font-size:.72rem">هنوز پیامی نیست</div>';
+  b.scrollTop=b.scrollHeight;
+  $("priv-with").textContent=S.countries[S.privTarget].flag+" "+S.countries[S.privTarget].name;
+}
+function rBtns(){
+  const s=S.selected,can=s&&s!==S.player&&isAlive(s),rel=can?getRel(S.player,s):null;
+  const p=S.countries[S.player];
+  const pending=S.requests.some(r=>r.from===S.player&&r.to===s);
+  $("btn-declare").disabled=!(can&&(rel==="peace"||rel==="nap"));
+  $("btn-attack").disabled=!(can&&rel==="war");
+  $("btn-peace").disabled=!(can&&rel==="war")||pending;
+  $("btn-ally").disabled=!(can&&rel==="peace")||pending;
+  $("btn-nap").disabled=!(can&&rel==="peace")||pending;
+  $("btn-break").disabled=!(can&&(rel==="ally"||rel==="nap"));
+  ["b-inf","b-tank","b-fig","b-fig2","b-fig3","b-drone","b-drone2","b-drone3","b-drone4","b-des","b-ship","b-oil","b-fac","b-port","b-tech","b-mine","b-farm","b-bank","b-energy"].forEach(id=>{const el=$(id);if(el)el.disabled=false});
+  if(p.money<45){const e=$("b-inf");if(e)e.disabled=true}
+  if(p.money<130){const e=$("b-tank");if(e)e.disabled=true}
+  if(p.money<190){const e=$("b-fig");if(e)e.disabled=true}
+  if(p.money<280){const e=$("b-fig2");if(e)e.disabled=true}
+  if(p.money<420){const e=$("b-fig3");if(e)e.disabled=true}
+  if(p.money<95){const e=$("b-drone");if(e)e.disabled=true}
+  if(p.money<75){const e=$("b-drone2");if(e)e.disabled=true}
+  if(p.money<160){const e=$("b-drone3");if(e)e.disabled=true}
+  if(p.money<130){const e=$("b-drone4");if(e)e.disabled=true}
+  if(p.money<210){const e=$("b-des");if(e)e.disabled=true}
+  if(p.money<350){const e=$("b-ship");if(e)e.disabled=true}
+  // eco buttons always clickable; build() checks cost dynamically
+
+}
+
+
+function rMap(){
+  const el=document.getElementById("leaflet-map");
+  if(!el||typeof L==="undefined")return;
+  const ww=w();
+  const mw=$("map-weather"); if(mw) mw.textContent=ww.icon+" "+ww.name;
+  if(!leafletMap){
+    leafletMap=L.map("leaflet-map",{
+      zoomControl:true, attributionControl:false, worldCopyJump:true,
+      preferCanvas:true, fadeAnimation:false, zoomAnimation:true, markerZoomAnimation:false
+    }).setView([27,50],4);
+    const imagery=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:11,minZoom:2,updateWhenIdle:true,keepBuffer:1});
+    const street=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:11,minZoom:2,updateWhenIdle:true,keepBuffer:1});
+    const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:11,minZoom:2,updateWhenIdle:true,keepBuffer:1});
+    street.addTo(leafletMap);
+    S._mapBases={imagery,street,osm};
+    S._mapCurrent=street;
+    leafletMap.on("click", function(ev){ handleMapClick(ev.latlng); });
+    S._mapBuilt=false;
+  }
+  // Only rebuild markers when needed (first time or forced)
+  if(S._mapBuilt && !S._mapForceRebuild){
+    setTimeout(()=>{try{leafletMap.invalidateSize()}catch(e){}},150);
+    return;
+  }
+  S._mapForceRebuild=false;
+  mapLayers.forEach(l=>{try{leafletMap.removeLayer(l)}catch(e){}});
+  mapLayers=[];
+  S._mapMarkers={};
+
+  Object.values(S.countries).forEach(c=>{
+    const g=GEO[c.id]; if(!g)return;
+    const rel=getRel(S.player,c.id);
+    let color="#94a3b8", bg="#1e293b";
+    if(c.id===S.player){ color="#38bdf8"; bg="#0c4a6e"; }
+    else if(rel==="war"){ color="#fb7185"; bg="#7f1d1d"; }
+    else if(rel==="ally"){ color="#34d399"; bg="#064e3b"; }
+    else if(rel==="nap"){ color="#fbbf24"; bg="#78350f"; }
+    const label=(CITY_GEO[c.id]?CITY_GEO[c.id][0][0]:c.name);
+    const htmlIcon=`<div style="background:${bg};border:2px solid ${color};border-radius:16px;padding:4px 10px;font-size:12px;color:#fff;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.45);font-family:Vazirmatn,sans-serif;font-weight:600">${c.flag} ${label}</div>`;
+    const icon=L.divIcon({className:"ww-country-icon",html:htmlIcon,iconSize:[120,32],iconAnchor:[60,16]});
+    const marker=L.marker([g.lat,g.lng],{icon,interactive:true,keyboard:false}).addTo(leafletMap);
+    marker.on("click", function(e){ L.DomEvent.stopPropagation(e); openCountryFromMap(c.id, marker); });
+    mapLayers.push(marker);
+    S._mapMarkers[c.id]=marker;
+  });
+
+  const known={hormuz:[26.6,56.2],suez:[30.5,32.3],panama:[9.1,-79.7],malacca:[1.4,103.0],gibraltar:[36.0,-5.6],bab:[12.5,43.3]};
+  S.strat.forEach(s=>{
+    const ll=known[s.id]; if(!ll)return;
+    const ic=L.divIcon({className:"",html:`<div style="background:#f59e0b;border:2px solid #fde68a;border-radius:10px;padding:5px 7px;font-size:14px;box-shadow:0 0 12px rgba(245,158,11,.5)">${s.icon}</div>`,iconSize:[34,34],iconAnchor:[17,17]});
+    const mk=L.marker(ll,{icon:ic,interactive:true,keyboard:false}).addTo(leafletMap);
+    mk.on("click", function(e){ L.DomEvent.stopPropagation(e); showStratPopup(s, mk); });
+    mapLayers.push(mk);
+  });
+  S._mapBuilt=true;
+  setTimeout(()=>{try{leafletMap.invalidateSize()}catch(e){}},200);
+}
+function refreshMapMarkers(){
+  S._mapForceRebuild=true;
+  S._mapBuilt=false;
+  rMap();
+}
+function handleMapClick(latlng){
+  // nearest country within ~400km
+  let best=null, bestD=600;
+  Object.values(S.countries).forEach(c=>{
+    const g=GEO[c.id]; if(!g)return;
+    const d=leafletMap.distance(latlng,[g.lat,g.lng])/1000;
+    if(d<bestD){bestD=d;best=c.id}
+  });
+  // nearest strat within 250km
+  let bestS=null, bestSD=250;
+  const known={hormuz:[26.6,56.2],suez:[30.5,32.3],panama:[9.1,-79.7],malacca:[1.4,103.0],gibraltar:[36.0,-5.6],bab:[12.5,43.3]};
+  S.strat.forEach(s=>{
+    const ll=known[s.id]; if(!ll)return;
+    const d=leafletMap.distance(latlng,ll)/1000;
+    if(d<bestSD){bestSD=d;bestS=s}
+  });
+  if(bestS && bestSD < bestD){
+    const mk=S._mapMarkers && S._mapMarkers[bestS.owner];
+    showStratPopup(bestS, mk || L.marker([known[bestS.id][0],known[bestS.id][1]]).addTo(leafletMap));
+    return;
+  }
+  if(best) openCountryFromMap(best, S._mapMarkers[best]);
+}
+
+function closeMapSheet(){
+  const s=$("map-sheet"); if(s) s.style.display="none";
+  try{if(leafletMap) leafletMap.closePopup()}catch(e){}
+}
+function openMapSheet(title, bodyHtml, actionsHtml){
+  const sheet=$("map-sheet");
+  if(!sheet){ toast(String(title)); return; }
+  $("sheet-title").innerHTML=title;
+  $("sheet-body").innerHTML=bodyHtml;
+  $("sheet-actions").innerHTML=actionsHtml||"";
+  sheet.style.display="block";
+  try{sheet.scrollTop=0}catch(e){}
+}
+function showStratPopup(s, marker){
+  const info=(typeof STRAT_INFO!=="undefined"&&STRAT_INFO[s.id])?STRAT_INFO[s.id]:{title:s.name,desc:"نقطه استراتژیک مهم",bonus:"+"+s.bonus+"M$ درآمد"};
+  const owner=S.countries[s.owner];
+  const body=`<div style="margin-bottom:6px">${info.desc}</div>
+    <div>💰 ${info.bonus||("+"+s.bonus+"M$")}</div>
+    <div style="margin-top:4px">🏳️ کنترل: ${owner?owner.flag+" "+owner.name:"نامشخص"}</div>`;
+  const acts=owner?`<button class="btn-chat" style="grid-column:1/-1" onclick="closeMapSheet();openCountryFromMap('${s.owner}')">مشاهده کشور کنترل‌کننده</button>`:"";
+  openMapSheet((s.icon||"📌")+" "+(info.title||s.name), body, acts);
+}
+function showCountryPopup(id, marker){ openCountryFromMap(id, marker); }
+function openCountryFromMap(id, layer){
+  const c=S.countries[id]; if(!c){toast("کشور یافت نشد");return}
+  select(id,{skipMap:true});
+  const rel=getRel(S.player,id);
+  const isSelf=id===S.player;
+  let relTxt="صلح";
+  if(rel==="war") relTxt="در حال جنگ";
+  else if(rel==="ally") relTxt="متحد";
+  else if(rel==="nap") relTxt="عدم تجاوز";
+  else if(isSelf) relTxt="کشور شما";
+  const pop=(typeof POP!=="undefined"&&POP[id])?(POP[id]+" میلیون نفر"):"—";
+  const cities=(typeof CITIES!=="undefined"&&CITIES[id])?CITIES[id].join("، "):"—";
+  const strat=S.strat.filter(s=>s.owner===id).map(s=>(s.icon||"")+" "+s.name).join(" · ")||"—";
+  let body=`
+    <div>👥 جمعیت: <b>${pop}</b></div>
+    <div>🏙️ شهرها: ${cities}</div>
+    <div>📍 استراتژیک: ${strat}</div>
+    <div>📡 وضعیت دیپلماتیک: <b>${relTxt}</b></div>`;
+  if(isSelf){
+    body+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)">
+      <div>⚔️ قدرت: <b>${fmt(power(c))}</b></div>
+      <div>💰 خزانه: <b>${fmt(c.money)}M$</b></div>
+      <div>🪖 ${fmt(c.infantry)} · 🛡️ ${fmt(c.tanks)} · ✈️ ${fmt(c.fighters)}</div>
+      <div>🛸 ${fmt(c.drones||0)} · ⚓ ${fmt(c.destroyers||0)} · 🚢 ${fmt(c.ships)}</div>
+    </div>`;
+  } else {
+    body+=`<div style="margin-top:8px;color:#94a3b8">🔒 آمار نظامی این کشور محرمانه است</div>`;
+  }
+  let acts="";
+  if(isSelf){
+    acts=`<button class="btn-chat" style="grid-column:1/-1" onclick="closeMapSheet()">این کشور شماست</button>`;
+  } else {
+    acts=`
+      <button class="btn-ally" onclick="closeMapSheet();mapAction('ally','${id}')">🤝 اتحاد</button>
+      <button class="btn-nap" onclick="closeMapSheet();mapAction('nap','${id}')">📜 پیمان</button>
+      <button class="btn-war" onclick="closeMapSheet();mapAction('war','${id}')">⚔️ جنگ</button>
+      <button class="btn-chat" onclick="closeMapSheet();mapAction('chat','${id}')">💬 چت</button>
+      <button class="btn-atk" onclick="closeMapSheet();mapAction('attack','${id}')">🚀 پنل جنگ / حمله</button>`;
+  }
+  openMapSheet(c.flag+" "+c.name, body, acts);
+}
+function mapAction(type,id){
+  select(id,{skipMap:true});
+  if(type==="chat"){ openPanel("pchat"); setTimeout(()=>openPriv(id),100); return; }
+  if(type==="ally"){ openPanel("dip"); setTimeout(()=>{S.selected=id;rAttackPlanner();sendRequest("ally")},120); return; }
+  if(type==="nap"){ openPanel("dip"); setTimeout(()=>{S.selected=id;sendRequest("nap")},120); return; }
+  if(type==="war"){
+    if(getRel(S.player,id)==="war"){toast("در حال جنگ هستید");openPanel("war");return;}
+    openPanel("war");
+    setTimeout(()=>{S.selected=id;declareWar()},150);
+    return;
+  }
+  if(type==="attack"){ openPanel("war"); return; }
+}
+
+function rUN(){
+  const b=$("un-chat"); if(!b)return;
+  if(!S.unChat) S.unChat=[];
+  b.innerHTML=S.unChat.map(m=>{
+    if(m.type==="judge") return `<div class="cmsg dip"><div class="fr">⚖️ قاضی سازمان ملل</div>${m.text}</div>`;
+    if(m.type==="system") return `<div class="cmsg sys">${m.text}</div>`;
+    return `<div class="cmsg"><div class="fr">${m.from}</div>${m.text}</div>`;
+  }).join("") || '<div class="cmsg sys">تالار سازمان ملل خالی است. اولین پیام را بفرستید.</div>';
+  b.scrollTop=b.scrollHeight;
+}
+function sendUN(){
+  const i=$("un-input"); if(!i)return;
+  const t=i.value.trim(); if(!t)return;
+  if(!S.unChat) S.unChat=[];
+  const p=S.countries[S.player];
+  S.unChat.push({from:p.flag+" "+p.name, text:t, type:"user", time:Date.now()});
+  i.value="";
+  rUN();
+  // AI countries sometimes reply in UN
+  if(Math.random()<0.45){
+    setTimeout(()=>{
+      const ais=alive().filter(id=>id!==S.player);
+      if(!ais.length)return;
+      const id=ais[Math.floor(Math.random()*ais.length)];
+      const c=S.countries[id];
+      const replies=["از موضع خود دفاع می‌کنیم.","خواهان حفظ ثبات جهانی هستیم.","این موضوع باید در چارچوب دیپلماسی حل شود.","آماده گفت‌وگو هستیم.","نگران تنش‌های منطق هستیم."];
+      S.unChat.push({from:c.flag+" "+c.name, text:replies[Math.floor(Math.random()*replies.length)], type:"user", time:Date.now()});
+      rUN();
+    },1200+Math.random()*2000);
+  }
+  // Judge occasionally intervenes
+  if(Math.random()<0.25){
+    setTimeout(()=>judgeSpeak("auto"),2500);
+  }
+  writeSave(true);
+}
+function judgeSpeak(mode){
+  if(!S.unChat) S.unChat=[];
+  const wars=[];
+  Object.keys(S.countries).forEach(a=>{
+    Object.keys(S.countries).forEach(b=>{
+      if(a<b && getRel(a,b)==="war") wars.push(S.countries[a].flag+"–"+S.countries[b].flag);
+    });
+  });
+  let text="";
+  if(mode==="ceasefire"){
+    text = wars.length
+      ? ("با بررسی وضعیت، آتش‌بس فوری بین جبهه‌های درگیر پیشنهاد می‌شود. جنگ‌های فعال: "+wars.slice(0,6).join("، ")+". نقض آتش‌بس هزینه سیاسی دارد.")
+      : "در حال حاضر جنگ فعالی ثبت نشده. آتش‌بس جهانی قابل تمدید است.";
+  } else if(mode==="dispute"){
+    text = "شکایت ثبت شد. قاضی توصیه می‌کند مذاکره مستقیم، پیمان عدم تجاوز، یا ارجاع به تالار عمومی انجام شود. توسل به زور آخرین گزینه است.";
+  } else {
+    const opts=[
+      "یادآوری: منشور ملل متحد بر حل مسالمت‌آمیز اختلافات تأکید دارد.",
+      "تنش‌های نظامی رو به افزایش است. کشورها به خویشتن‌داری دعوت می‌شوند.",
+      "هرگونه حمله به غیرنظامیان از نظر این نهاد محکوم است.",
+      wars.length?("هشدار: "+wars.length+" جبهه جنگی فعال است."):"وضعیت نسبتاً آرام است. فرصت دیپلماسی را از دست ندهید."
+    ];
+    text=opts[Math.floor(Math.random()*opts.length)];
+  }
+  S.unChat.push({from:"judge", text:text, type:"judge", time:Date.now()});
+  rUN();
+  news("⚖️ قاضی سازمان ملل موضع‌گیری کرد");notify("⚖️ پیام جدید از قاضی سازمان ملل","dip");
+}
+function askJudge(kind){
+  const p=S.countries[S.player];
+  if(!S.unChat) S.unChat=[];
+  S.unChat.push({from:p.flag+" "+p.name, text: kind==="ceasefire"?"درخواست بررسی آتش‌بس توسط قاضی":"ثبت شکایت دیپلماتیک رسمی", type:"user", time:Date.now()});
+  rUN();
+  setTimeout(()=>judgeSpeak(kind),800);
+}
+
+
+/* ===== GLOBAL EVENTS ===== */
+const WORLD_EVENTS=[
+  {id:"oil_crisis",title:"🛢️ بحران نفت",desc:"قیمت انرژی جهش کرد. کشورهای نفت‌خیز سود بردند.",apply:(S)=>{
+    Object.values(S.countries).forEach(c=>{
+      if(["saudi","iran","russia","usa","nigeria","algeria"].includes(c.id)){c.income+=3;c.money+=40}
+      else {c.income=Math.max(1,c.income-1)}
+    });
+  }},
+  {id:"market_boom",title:"📈 رونق بازار جهانی",desc:"تجارت جهانی رشد کرد. درآمد همه کمی بالا رفت.",apply:(S)=>{Object.values(S.countries).forEach(c=>{c.money+=25;c.income+=1})}},
+  {id:"recession",title:"📉 رکود اقتصادی",desc:"رکود، خزانه‌ها را تحت فشار گذاشت.",apply:(S)=>{Object.values(S.countries).forEach(c=>{c.money=Math.max(0,c.money-30);c.income=Math.max(1,c.income-1)})}},
+  {id:"storm",title:"⛈️ طوفان‌های شدید",desc:"آب‌وهوای سخت عملیات نظامی را تضعیف کرد.",apply:(S)=>{S.weather=3;Object.values(S.countries).forEach(c=>{c.fighters=Math.max(0,c.fighters-2)})}},
+  {id:"tech_leap",title:"🔬 جهش فناوری",desc:"کشورهای پیشرفته جهش فنی گرفتند.",apply:(S)=>{Object.values(S.countries).forEach(c=>{if(c.tech>=1.05){c.tech=Math.min(1.7,c.tech+0.02);c.income+=1}})}},
+  {id:"peace_wave",title:"🕊️ موج صلح",desc:"فشار بین‌المللی برای کاهش تنش‌ها افزایش یافت.",apply:(S)=>{
+    Object.keys(S.relations).forEach(a=>{Object.keys(S.relations[a]||{}).forEach(b=>{
+      if(S.relations[a][b]==="war"&&Math.random()<0.12){S.relations[a][b]="peace";S.relations[b][a]="peace"}
+    })});
+  }},
+  {id:"arms_race",title:"🛡️ مسابقه تسلیحاتی",desc:"تولید زرهی در جهان افزایش یافت.",apply:(S)=>{Object.values(S.countries).forEach(c=>{c.tanks+=3;c.money=Math.max(0,c.money-15)})}},
+  {id:"cyber",title:"💻 حمله سایبری گسترده",desc:"برخی خزانه‌ها آسیب دیدند.",apply:(S)=>{Object.values(S.countries).forEach(c=>{if(Math.random()<0.35)c.money=Math.max(0,c.money-45)})}},
+  {id:"sanctions",title:"📦 تحریم‌های زنجیره‌ای",desc:"کشورهای درگیر جنگ درآمد از دست دادند.",apply:(S)=>{
+    Object.values(S.countries).forEach(c=>{
+      const atWar=Object.keys(S.relations[c.id]||{}).some(o=>S.relations[c.id][o]==="war");
+      if(atWar){c.income=Math.max(1,c.income-2);c.money=Math.max(0,c.money-20)}
+    });
+  }},
+  {id:"refugee",title:"🏕️ بحران انسانی",desc:"کشورهای همسایه جنگ هزینه اجتماعی دادند.",apply:(S)=>{
+    Object.values(S.countries).forEach(c=>{
+      const atWar=Object.keys(S.relations[c.id]||{}).some(o=>S.relations[c.id][o]==="war");
+      if(atWar)c.money=Math.max(0,c.money-25);
+    });
+  }}
+];
+function triggerWorldEvent(forceId){
+  const ev=forceId?WORLD_EVENTS.find(e=>e.id===forceId):WORLD_EVENTS[Math.floor(Math.random()*WORLD_EVENTS.length)];
+  if(!ev)return;
+  try{ev.apply(S)}catch(e){console.error(e)}
+  S.currentEvent={id:ev.id,title:ev.title,desc:ev.desc,until:Date.now()+3*60*1000};
+  const ban=$("event-banner"),et=$("event-title"),ed=$("event-desc");
+  if(ban){ban.classList.add("show");if(et)et.textContent=ev.title;if(ed)ed.textContent=ev.desc}
+  news(ev.title+" — "+ev.desc);
+  notify(ev.title,"imp");
+  writeSave(true);full();
+}
+function tickEvents(){
+  if(!S.started)return;
+  if(S.currentEvent&&S.currentEvent.until<Date.now()){
+    S.currentEvent=null;
+    const ban=$("event-banner"); if(ban) ban.classList.remove("show");
+  }
+  // random event every ~45-90s of ticks: incomeTick is 10s, so ~15% chance
+  if(Math.random()<0.14) triggerWorldEvent();
+}
+
+/* ===== RANKINGS ===== */
+function rRank(mode){
+  S.rankMode=mode||S.rankMode||"power";
+  const list=$("rank-list"); if(!list)return;
+  const rows=Object.values(S.countries).map(c=>{
+    let score=0,label="";
+    if(S.rankMode==="money"){score=c.money;label=fmt(c.money)+"M$"}
+    else if(S.rankMode==="income"){score=incomeOf(c);label=fmt(incomeOf(c))+"M$/تیک"}
+    else if(S.rankMode==="ally"){
+      score=Object.keys(S.relations[c.id]||{}).filter(o=>S.relations[c.id][o]==="ally").length;
+      label=score+" متحد";
+    } else {score=power(c);label=fmt(score)}
+    return {c,score,label};
+  }).sort((a,b)=>b.score-a.score);
+  list.innerHTML=rows.map((r,i)=>`
+    <div class="rrow ${r.c.id===S.player?"me":""}">
+      <span class="rk">${i+1}</span>
+      <span>${r.c.flag}</span>
+      <span style="flex:1;font-weight:600">${r.c.name}</span>
+      <span style="color:var(--cyan)">${r.label}</span>
+    </div>`).join("");
+}
+
+/* ===== ESPIONAGE ===== */
+function rSpyTargets(){
+  const el=$("spy-targets"); if(!el)return;
+  el.innerHTML=Object.values(S.countries).filter(c=>c.id!==S.player).map(c=>{
+    const rel=getRel(S.player,c.id);
+    let rt="صلح",rc="r-peace";
+    if(rel==="war"){rt="جنگ";rc="r-war"}else if(rel==="ally"){rt="متحد";rc="r-ally"}
+    else if(rel==="nap"){rt="عدم‌تجاوز";rc="r-nap"}
+    return `<div class="crow ${S.selected===c.id?"sel":""}" onclick="select('${c.id}',{skipMap:true});rSpySel()"><span>${c.flag}</span><span>${c.name}</span><span class="rel ${rc}">${rt}</span></div>`;
+  }).join("");
+  rSpySel();rSpyFiles();
+}
+function rSpySel(){
+  const box=$("spy-sel"); if(!box)return;
+  if(!S.selected||S.selected===S.player){box.innerHTML="یک کشور دشمن/هدف انتخاب کنید";return}
+  const c=S.countries[S.selected];
+  const intel=(S.intel&&S.intel[S.selected])||null;
+  let extra=intel?`<div style="margin-top:6px;color:var(--gold)">📁 پرونده فعال تا ${new Date(intel.until).toLocaleTimeString("fa-IR")}</div>`:"";
+  box.innerHTML=`<strong>${c.flag} ${c.name}</strong><div style="font-size:.75rem;color:var(--muted);margin-top:4px">جاسوسی ممکن است شکست بخورد یا لو برود.</div>${extra}`;
+  const p=S.countries[S.player];
+  const b1=$("btn-spy1"),b2=$("btn-spy2");
+  if(b1)b1.disabled=p.money<80; if(b2)b2.disabled=p.money<180;
+}
+function rSpyFiles(){
+  const el=$("spy-files"); if(!el)return;
+  if(!S.intel)S.intel={};
+  const now=Date.now();
+  const entries=Object.keys(S.intel).filter(id=>S.intel[id].until>now);
+  if(!entries.length){el.innerHTML='<div style="color:var(--muted);font-size:.75rem">هنوز اطلاعاتی ندارید</div>';return}
+  el.innerHTML=entries.map(id=>{
+    const c=S.countries[id], d=S.intel[id];
+    return `<div class="spy-card"><div style="font-weight:700;margin-bottom:4px">${c.flag} ${c.name}</div>
+      <div>⚔️ قدرت تقریبی: ${fmt(d.power)}</div>
+      <div>💰 خزانه تقریبی: ${fmt(d.money)}M$</div>
+      ${d.deep?`<div>🪖 پیاده ~${fmt(d.infantry)} · 🛡️ تانک ~${fmt(d.tanks)}</div>
+      <div>✈️ جنگنده ~${fmt(d.fighters)} · 🛸 پهپاد ~${fmt(d.drones)}</div>
+      <div>⚓ ناوشکن ~${fmt(d.destroyers)} · 🚢 ناو ~${fmt(d.ships)}</div>`:`<div style="color:var(--muted)">برای جزئیات بیشتر جاسوسی عمیق انجام دهید</div>`}
+      <div style="margin-top:4px;font-size:.68rem;color:var(--muted)">اعتبار تا ${new Date(d.until).toLocaleString("fa-IR")}</div>
+    </div>`;
+  }).join("");
+}
+function doSpy(level){
+  if(!S.selected||S.selected===S.player){toast("هدف را انتخاب کنید");return}
+  const p=S.countries[S.player], t=S.countries[S.selected];
+  const cost=level==="deep"?180:80;
+  if(p.money<cost){toast("پول کافی نیست");return}
+  p.money-=cost;
+  const success=Math.random()<(level==="deep"?0.72:0.8);
+  const caught=Math.random()<(level==="deep"?0.22:0.12);
+  if(!success){
+    notify(`جاسوسی در ${t.flag} شکست خورد`,"imp");
+    log(p.flag+" عملیات اطلاعاتی ناموفق داشت.","imp");
+    if(caught){p.money=Math.max(0,p.money-20);news("🕵️ مأمور اطلاعاتی "+p.flag+" در "+t.flag+" شناسایی شد")}
+    writeSave();full();rSpySel();return;
+  }
+  if(!S.intel)S.intel={};
+  const noise=()=>0.85+Math.random()*0.3;
+  const data={
+    power:Math.floor(power(t)*noise()),
+    money:Math.floor(t.money*noise()),
+    deep:level==="deep",
+    until:Date.now()+(level==="deep"?8:5)*60*1000
+  };
+  if(level==="deep"){
+    data.infantry=Math.floor(t.infantry*noise());
+    data.tanks=Math.floor(t.tanks*noise());
+    data.fighters=Math.floor(t.fighters*noise());
+    data.drones=Math.floor((t.drones||0)*noise());
+    data.destroyers=Math.floor((t.destroyers||0)*noise());
+    data.ships=Math.floor(t.ships*noise());
+  }
+  S.intel[t.id]=data;
+  notify(`📁 اطلاعات ${t.flag} ${t.name} به‌روز شد`,"ok");
+  log(p.flag+" پرونده اطلاعاتی "+t.flag+" را تکمیل کرد.","ok");
+  if(caught){news("🕵️ "+t.flag+" از فعالیت اطلاعاتی "+p.flag+" مطلع شد");notify("هویت مأموران تا حدی لو رفت","imp")}
+  writeSave();full();rSpyFiles();rSpySel();
+}
+
+
+function rWeather(){
+  const ww=w();
+  const set=(id,v)=>{const e=$(id); if(e) e.textContent=v};
+  set("wx-name", ww.icon+" "+ww.name);
+  set("wx-effect", ww.effect||ww.desc);
+  set("wx-desc", ww.desc);
+  set("wx-icon", ww.icon);
+  set("wx-temp", (ww.temp!=null?ww.temp:20)+"°");
+  set("wx-wind", (ww.wind!=null?ww.wind:10)+" km/h");
+  set("wx-rain", (ww.rain!=null?ww.rain:0)+" mm");
+  set("wx-vis", (ww.vis!=null?ww.vis:10)+" km");
+  const land=ww.land!=null?ww.land:100, air=ww.air!=null?ww.air:100, naval=ww.naval!=null?ww.naval:100;
+  set("wx-land", land+"%"); set("wx-air", air+"%"); set("wx-naval", naval+"%");
+  const lb=$("wx-land-bar"), ab=$("wx-air-bar"), nb=$("wx-naval-bar");
+  if(lb) lb.style.width=land+"%"; if(ab) ab.style.width=air+"%"; if(nb) nb.style.width=naval+"%";
+  const colorize=(el,v)=>{if(!el)return; el.style.color=v>=95?"#34d399":v>=80?"#fbbf24":"#f87171"};
+  colorize($("wx-land"),land); colorize($("wx-air"),air); colorize($("wx-naval"),naval);
+  const mods=$("wx-mods");
+  if(mods){
+    const inc=Math.round((ww.incMod-1)*100), mil=Math.round((ww.milMod-1)*100);
+    mods.innerHTML=`<div>💰 درآمد: <b style="color:${inc>=0?"#34d399":"#f87171"}">${inc>=0?"+":""}${inc}%</b></div>
+    <div>⚔️ قدرت رزمی کلی: <b style="color:${mil>=0?"#34d399":"#f87171"}">${mil>=0?"+":""}${mil}%</b></div>
+    <div style="margin-top:6px;color:var(--muted)">زمینی ${land}% · هوایی ${air}% · دریایی ${naval}%</div>`;
+  }
+  // sync top widgets
+  set("w-icon", ww.icon); set("w-name", ww.name); set("w-eff", ww.effect||ww.desc);
+  const ht=$("htag-weather"); if(ht) ht.textContent=ww.icon+" "+ww.name;
+  const mw=$("map-weather"); if(mw) mw.textContent=ww.icon+" "+ww.name;
+}
+
+
+/* ===== STRATEGIC RESOURCES ===== */
+const RES_KEYS=["oil","steel","food","uranium","powerProd","powerUse"];
+function defaultRes(){
+  return {oil:8000,steel:6000,food:5000,uranium:400,powerProd:40,powerUse:25,lv:{oil:1,steel:1,food:1,uranium:1,power:1}};
+}
+function ensureRes(c){
+  if(!c.res) c.res=defaultRes();
+  if(!c.res.lv) c.res.lv={oil:1,steel:1,food:1,uranium:1,power:1};
+  ["oil","steel","food","uranium","power"].forEach(k=>{if(c.res.lv[k]==null)c.res.lv[k]=1});
+  return c.res;
+}
+function resProd(c){
+  const r=ensureRes(c);
+  const L=r.lv;
+  // base production per income tick (~10s) scaled
+  return {
+    oil: Math.floor((18+L.oil*12)*(c.eco&&c.eco.oil?1+c.eco.oil*0.15:1)),
+    steel: Math.floor((14+L.steel*10)*(c.eco&&c.eco.factory?1+c.eco.factory*0.12:1)),
+    food: Math.floor((16+L.food*11)*(c.eco&&c.eco.farm?1+c.eco.farm*0.15:1)),
+    uranium: Math.floor((2+L.uranium*3)*(c.eco&&c.eco.mine?1+c.eco.mine*0.1:1)),
+    powerProd: Math.floor(30+L.power*18+(c.eco&&c.eco.energy?c.eco.energy*8:0)),
+    powerUse: Math.floor(20+L.steel*3+L.oil*2+L.uranium*2+(c.industry||0)*0.05)
+  };
+}
+function tickResources(){
+  if(!S.started)return;
+  Object.values(S.countries).forEach(c=>{
+    const r=ensureRes(c);
+    const p=resProd(c);
+    r.oil+=p.oil; r.steel+=p.steel; r.food+=p.food; r.uranium+=p.uranium;
+    r.powerProd=p.powerProd; r.powerUse=p.powerUse;
+    // shortage penalty
+    if(p.powerProd<p.powerUse){ c.income=Math.max(1,(c.income||1)*0.995); }
+    if(r.food<0) r.food=0;
+  });
+}
+const RES_UPGRADES={
+  oil:[
+    {id:"rig",name:"دکل حفاری",desc:"+۱۲٪ تولید نفت",costM:120,costSteel:400,costOil:0,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.lv.oil=Math.min(10,r.lv.oil+1)}},
+    {id:"refinery",name:"پالایشگاه",desc:"+۸۰۰ نفت آنی · سطح نفت +۱",costM:200,costSteel:600,costOil:500,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.oil+=800;r.lv.oil=Math.min(10,r.lv.oil+1)}}
+  ],
+  steel:[
+    {id:"furnace",name:"کوره ذوب",desc:"سطح فولاد +۱",costM:140,costSteel:200,costOil:300,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.lv.steel=Math.min(10,r.lv.steel+1)}},
+    {id:"mill",name:"نورد فولاد",desc:"+۶۰۰ فولاد آنی",costM:160,costSteel:100,costOil:250,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.steel+=600;r.lv.steel=Math.min(10,r.lv.steel+1)}}
+  ],
+  food:[
+    {id:"silo",name:"سیلو غلات",desc:"سطح غذا +۱",costM:90,costSteel:150,costOil:100,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.lv.food=Math.min(10,r.lv.food+1)}},
+    {id:"farmkit",name:"بسته کشاورزی",desc:"+۷۰۰ غذا آنی",costM:80,costSteel:80,costOil:80,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.food+=700}}
+  ],
+  uranium:[
+    {id:"mineu",name:"استخراج اورانیوم",desc:"سطح اورانیوم +۱",costM:260,costSteel:500,costOil:400,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.lv.uranium=Math.min(10,r.lv.uranium+1)}},
+    {id:"enrich",name:"غنی‌سازی",desc:"+120 اورانیوم آنی",costM:300,costSteel:400,costOil:300,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.uranium+=120}}
+  ],
+  power:[
+    {id:"grid",name:"توسعه شبکه برق",desc:"سطح برق +۱ · تولید بیشتر",costM:150,costSteel:350,costOil:200,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.lv.power=Math.min(10,r.lv.power+1)}},
+    {id:"plant",name:"توربین جدید",desc:"+۲۵ تولید برق پایه",costM:180,costSteel:400,costOil:250,bonus:()=>{const r=ensureRes(S.countries[S.player]);r.lv.power=Math.min(10,r.lv.power+1);r.powerProd+=25}}
+  ]
+};
+function fmtRes(n){
+  if(n>=1e6) return (n/1e6).toFixed(1)+"M";
+  if(n>=1000) return (n/1000).toFixed(n>=10000?0:1)+"K";
+  return String(Math.floor(n));
+}
+function rRes(){
+  if(!S.player)return;
+  const c=S.countries[S.player];
+  const r=ensureRes(c);
+  const p=resProd(c);
+  const ov=$("res-overview");
+  if(ov){
+    const net=p.powerProd-p.powerUse;
+    const pct=Math.min(100,Math.round((p.powerUse/Math.max(1,p.powerProd))*100));
+    ov.innerHTML=`
+      <div class="res-card"><div class="rh"><span>نفت</span><span>🛢️</span></div><div class="rv">${fmtRes(r.oil)}</div><div class="rp up">▲ ${fmtRes(p.oil)} / تیک</div><div style="font-size:.68rem;color:#94a3b8;margin-top:4px">سطح ${r.lv.oil}</div></div>
+      <div class="res-card"><div class="rh"><span>فولاد</span><span>⚙️</span></div><div class="rv">${fmtRes(r.steel)}</div><div class="rp up">▲ ${fmtRes(p.steel)} / تیک</div><div style="font-size:.68rem;color:#94a3b8;margin-top:4px">سطح ${r.lv.steel}</div></div>
+      <div class="res-card"><div class="rh"><span>غذا</span><span>🌾</span></div><div class="rv">${fmtRes(r.food)}</div><div class="rp up">▲ ${fmtRes(p.food)} / تیک</div><div style="font-size:.68rem;color:#94a3b8;margin-top:4px">سطح ${r.lv.food}</div></div>
+      <div class="res-card"><div class="rh"><span>اورانیوم</span><span>☢️</span></div><div class="rv">${fmtRes(r.uranium)}</div><div class="rp up">▲ ${fmtRes(p.uranium)} / تیک</div><div style="font-size:.68rem;color:#94a3b8;margin-top:4px">سطح ${r.lv.uranium}</div></div>
+      <div class="res-card" style="grid-column:1/-1">
+        <div class="rh"><span>شبکه برق</span><span>⚡</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
+          <span style="color:#34d399">تولید ${p.powerProd}</span>
+          <span style="color:#f87171">مصرف ${p.powerUse}</span>
+          <span style="color:${net>=0?"#34d399":"#f87171"}">${net>=0?"+":""}${net}</span>
+        </div>
+        <div class="pow-bar"><i style="width:${pct}%"></i></div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-top:6px">${net>=0?"شبکه پایدار است":"کمبود برق — درآمد تحت فشار"} · سطح ${r.lv.power}</div>
+      </div>`;
+  }
+  rResDetail();
+}
+function setResTab(tab){
+  S.resTab=tab;
+  document.querySelectorAll("#res-tabs button").forEach(b=>b.classList.remove("on"));
+  const map={power:0,oil:1,steel:2,food:3,uranium:4,boost:5};
+  const btns=document.querySelectorAll("#res-tabs button");
+  const i=map[tab]; if(btns[i]) btns[i].classList.add("on");
+  rResDetail();
+}
+function rResDetail(){
+  const tab=S.resTab||"power";
+  const box=$("res-detail"); if(!box)return;
+  const c=S.countries[S.player]; const r=ensureRes(c); const p=resProd(c);
+  if(tab==="boost"){
+    let h='<div class="sec-title">🔧 تقویت‌کننده‌های منابع</div>';
+    Object.keys(RES_UPGRADES).forEach(cat=>{
+      h+=`<div style="font-size:.75rem;color:var(--cyan);margin:10px 0 6px">${cat}</div>`;
+      RES_UPGRADES[cat].forEach(u=>{
+        const can=c.money>=u.costM && r.steel>=u.costSteel && r.oil>=(u.costOil||0);
+        h+=`<div class="upg-item"><div><div class="ui-t">${u.name}</div><div class="ui-s">${u.desc}<br>💰${u.costM}M$ · ⚙️${u.costSteel} · 🛢️${u.costOil||0}</div></div>
+          <button ${can?"":"disabled"} onclick="buyResUp('${cat}','${u.id}')">خرید</button></div>`;
+      });
+    });
+    box.innerHTML=h; return;
+  }
+  const labels={power:["برق","⚡"],oil:["نفت","🛢️"],steel:["فولاد","⚙️"],food:["غذا","🌾"],uranium:["اورانیوم","☢️"]};
+  const [name,icon]=labels[tab]||["—","?"];
+  const lv=r.lv[tab]||1;
+  let stock=r[tab], prod=p[tab];
+  if(tab==="power"){ stock=p.powerProd; prod=p.powerProd-p.powerUse; }
+  let h=`<div class="sec-card" style="margin-bottom:12px">
+    <div style="font-size:1.1rem;font-weight:800;margin-bottom:6px">${icon} ${name}</div>
+    <div>موجودی/وضعیت: <b>${tab==="power"?("تولید "+p.powerProd+" / مصرف "+p.powerUse):fmtRes(stock)}</b></div>
+    <div>تولید هر تیک: <b style="color:#34d399">${tab==="power"?((prod>=0?"+":"")+prod):("+"+fmtRes(prod))}</b></div>
+    <div>سطح: <b>${lv}/10</b></div>
+  </div>
+  <div class="sec-title">ارتقای ${name}</div>`;
+  (RES_UPGRADES[tab]||[]).forEach(u=>{
+    const can=c.money>=u.costM && r.steel>=u.costSteel && r.oil>=(u.costOil||0);
+    h+=`<div class="upg-item"><div><div class="ui-t">${u.name}</div><div class="ui-s">${u.desc}<br>💰${u.costM}M$ · ⚙️${u.costSteel} · 🛢️${u.costOil||0}</div></div>
+      <button ${can?"":"disabled"} onclick="buyResUp('${tab}','${u.id}')">ارتقاء</button></div>`;
+  });
+  box.innerHTML=h;
+}
+function buyResUp(cat,id){
+  const list=RES_UPGRADES[cat]||[];
+  const u=list.find(x=>x.id===id); if(!u){toast("مورد یافت نشد");return}
+  const c=S.countries[S.player]; const r=ensureRes(c);
+  if(c.money<u.costM){toast("پول کافی نیست — نیاز "+u.costM+"M$");return}
+  if(r.steel<u.costSteel){toast("فولاد کافی نیست — نیاز "+u.costSteel);return}
+  if(r.oil<(u.costOil||0)){toast("نفت کافی نیست — نیاز "+(u.costOil||0));return}
+  const beforeLv=Object.assign({}, r.lv);
+  c.money-=u.costM; r.steel-=u.costSteel; r.oil-=(u.costOil||0);
+  try{u.bonus()}catch(e){console.error(e)}
+  const after=ensureRes(c);
+  // construction-style short timer feel for feedback
+  const msg="✅ خرید ثبت شد: "+u.name;
+  const detail=[];
+  if(after.lv.oil!==beforeLv.oil) detail.push("سطح نفت "+beforeLv.oil+"→"+after.lv.oil);
+  if(after.lv.steel!==beforeLv.steel) detail.push("سطح فولاد "+beforeLv.steel+"→"+after.lv.steel);
+  if(after.lv.food!==beforeLv.food) detail.push("سطح غذا "+beforeLv.food+"→"+after.lv.food);
+  if(after.lv.uranium!==beforeLv.uranium) detail.push("سطح اورانیوم "+beforeLv.uranium+"→"+after.lv.uranium);
+  if(after.lv.power!==beforeLv.power) detail.push("سطح برق "+beforeLv.power+"→"+after.lv.power);
+  const fullMsg=msg+(detail.length?" · "+detail.join(" · "):" · "+u.desc);
+  log(c.flag+" "+fullMsg,"ok");
+  notify(fullMsg,"ok");
+  toast(fullMsg);
+  // flash overlay confirm
+  showBuyFlash(u.name);
+  writeSave(true); // silent storage attempt
+  try{writeSave()}catch(e){}
+  full();
+  rRes();
+}
+function showBuyFlash(title){
+  let el=$("buy-flash");
+  if(!el){
+    el=document.createElement("div");
+    el.id="buy-flash";
+    el.style.cssText="position:fixed;top:20%;left:50%;transform:translateX(-50%);z-index:300;background:linear-gradient(135deg,#065f46,#047857);border:1px solid #34d399;color:#ecfdf5;padding:14px 18px;border-radius:16px;font-weight:800;font-size:.9rem;box-shadow:0 12px 40px rgba(0,0,0,.45);text-align:center;max-width:86%;pointer-events:none;opacity:0;transition:opacity .2s";
+    document.body.appendChild(el);
+  }
+  el.innerHTML="✅ خرید ثبت شد<br><span style='font-weight:600;font-size:.8rem;opacity:.95'>"+title+"</span>";
+  el.style.opacity="1";
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){el.style.opacity="0"},1800);
+}
+
+
+/* ===== ONLINE / FIREBASE ===== */
+let fbReady=false, fbDb=null, roomRef=null, roomUnsub=null;
+function loadFbConfig(){
+  try{return JSON.parse(localStorage.getItem("ww_fb_cfg")||"null")}catch(e){return null}
+}
+function saveFbConfig(){
+  const cfg={
+    apiKey:($("fb-api")||{}).value||"",
+    authDomain:($("fb-domain")||{}).value||"",
+    databaseURL:($("fb-url")||{}).value||"",
+    projectId:($("fb-project")||{}).value||""
+  };
+  if(!cfg.apiKey||!cfg.databaseURL){toast("apiKey و databaseURL لازم است");return}
+  localStorage.setItem("ww_fb_cfg",JSON.stringify(cfg));
+  toast("تنظیمات Firebase ذخیره شد");
+  initFirebase();
+}
+function fillFbForm(){
+  const cfg=loadFbConfig(); if(!cfg)return;
+  if($("fb-api"))$("fb-api").value=cfg.apiKey||"";
+  if($("fb-domain"))$("fb-domain").value=cfg.authDomain||"";
+  if($("fb-url"))$("fb-url").value=cfg.databaseURL||"";
+  if($("fb-project"))$("fb-project").value=cfg.projectId||"";
+}
+function initFirebase(){
+  const cfg=loadFbConfig();
+  const st=$("online-status");
+  if(!cfg){if(st)st.textContent="وضعیت: آفلاین — Firebase تنظیم نشده";return false}
+  try{
+    if(!firebase.apps.length){ firebase.initializeApp(cfg); }
+    fbDb=firebase.database();
+    fbReady=true;
+    if(st)st.textContent="وضعیت: Firebase وصل شد — اتاق بساز یا وارد شو";
+    return true;
+  }catch(e){
+    console.error(e);
+    fbReady=false;
+    if(st)st.textContent="خطا در اتصال Firebase: "+e.message;
+    return false;
+  }
+}
+function roomCode(){
+  const el=$("room-code");
+  let c=(el&&el.value?el.value:"").trim().toUpperCase();
+  if(!c){ c="WW"+Math.floor(1000+Math.random()*9000); if(el)el.value=c; }
+  return c.replace(/[^A-Z0-9]/g,"").slice(0,12);
+}
+function createRoom(){
+  if(!initFirebase()){toast("اول Firebase را تنظیم کن");return}
+  if(!S.player){toast("اول کشور انتخاب کن و وارد بازی شو");return}
+  const code=roomCode();
+  roomRef=fbDb.ref("rooms/"+code);
+  const payload={
+    host:S.player,
+    created:Date.now(),
+    players:{},
+    claims:{},
+    chat:{},
+    newsHead:""
+  };
+  payload.players[S.player]={name:C[S.player].name,flag:C[S.player].flag,ts:Date.now()};
+  payload.claims[S.player]=S.player;
+  roomRef.set(payload).then(()=>{
+    S.onlineRoom=code;
+    localStorage.setItem("ww_room",code);
+    toast("اتاق ساخته شد: "+code);
+    notify("🌐 اتاق آنلاین "+code+" ساخته شد","ok");
+    listenRoom(code);
+    syncMyState();
+  }).catch(e=>{toast("خطا: "+e.message);console.error(e)});
+}
+function joinRoom(){
+  if(!initFirebase()){toast("اول Firebase را تنظیم کن");return}
+  if(!S.player){toast("اول کشور انتخاب کن و وارد بازی شو");return}
+  const code=roomCode();
+  roomRef=fbDb.ref("rooms/"+code);
+  roomRef.once("value").then(snap=>{
+    if(!snap.exists()){toast("اتاق پیدا نشد");return}
+    const data=snap.val()||{};
+    const claims=data.claims||{};
+    // if country taken by other
+    if(claims[S.player] && claims[S.player]!==S.player){
+      // claims map: countryId -> countryId owner seat
+    }
+    // seat claim: each player unique country
+    const taken=Object.keys(data.players||{});
+    if(taken.includes(S.player)===false){
+      // check if someone else already is this country - players keyed by country
+    }
+    const players=data.players||{};
+    if(players[S.player] && players[S.player].lockId && players[S.player].lockId!==getClientId()){
+      toast("این کشور در اتاق گرفته شده");
+      return;
+    }
+    roomRef.child("players/"+S.player).set({name:C[S.player].name,flag:C[S.player].flag,ts:Date.now(),lockId:getClientId()});
+    roomRef.child("claims/"+S.player).set(S.player);
+    S.onlineRoom=code;
+    localStorage.setItem("ww_room",code);
+    toast("وارد اتاق "+code+" شدی");
+    listenRoom(code);
+    syncMyState();
+  }).catch(e=>toast(e.message));
+}
+function getClientId(){
+  let id=localStorage.getItem("ww_client");
+  if(!id){ id="c"+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem("ww_client",id); }
+  return id;
+}
+function listenRoom(code){
+  if(roomUnsub){try{roomRef.off()}catch(e){}}
+  roomRef=fbDb.ref("rooms/"+code);
+  roomRef.on("value", snap=>{
+    const data=snap.val(); if(!data)return;
+    const players=data.players||{};
+    const el=$("online-players");
+    if(el){
+      el.innerHTML="<b>بازیکنان اتاق "+code+":</b><br>"+Object.keys(players).map(id=>{
+        const p=players[id];
+        return (p.flag||"")+ " " +(p.name||id)+(id===S.player?" (شما)":"");
+      }).join("<br>");
+    }
+    const st=$("online-status");
+    if(st) st.textContent="وضعیت: آنلاین در اتاق "+code+" · "+Object.keys(players).length+" بازیکن";
+    // apply remote public events
+    if(data.publicNews && data.publicNews!==S._lastRemoteNews){
+      S._lastRemoteNews=data.publicNews;
+      if(data.publicNewsFrom!==S.player) news("🌐 "+data.publicNews);
+    }
+  });
+}
+function syncMyState(){
+  if(!fbReady||!S.onlineRoom||!S.player)return;
+  try{
+    fbDb.ref("rooms/"+S.onlineRoom+"/players/"+S.player).update({
+      ts:Date.now(),
+      money:Math.floor(S.countries[S.player].money),
+      power:Math.floor(power(S.countries[S.player])),
+      lockId:getClientId()
+    });
+  }catch(e){}
+}
+function leaveRoom(){
+  if(roomRef&&S.player){
+    try{ roomRef.child("players/"+S.player).remove(); }catch(e){}
+    try{ roomRef.off(); }catch(e){}
+  }
+  S.onlineRoom=null;
+  localStorage.removeItem("ww_room");
+  const st=$("online-status"); if(st) st.textContent="وضعیت: آفلاین (تک‌نفره)";
+  const el=$("online-players"); if(el) el.innerHTML="";
+  toast("از اتاق خارج شدی");
+}
+function publishPublicNews(text){
+  if(!fbReady||!S.onlineRoom)return;
+  try{
+    fbDb.ref("rooms/"+S.onlineRoom).update({publicNews:text,publicNewsFrom:S.player,publicNewsAt:Date.now()});
+  }catch(e){}
+}
+
+
+function rInv(){
+  if(!S.player)return;
+  const c=S.countries[S.player];
+  const r=(typeof ensureRes==="function")?ensureRes(c):{};
+  const eco=c.eco||{};
+  const box=$("inv-body"); if(!box)return;
+  const unit=(ic,name,val,hint)=>`<div class="inv-item"><div class="ii">${ic}</div><div class="in">${name}</div><div class="iv">${fmt(val||0)}</div>${hint?`<div class="ih">${hint}</div>`:""}</div>`;
+  const lv=(k)=>eco[k]||0;
+  box.innerHTML=`
+    <div class="sec-card" style="margin-bottom:12px;font-size:.8rem">
+      <b>${c.flag} ${c.name}</b> — خلاصه دارایی‌های فعلی شما
+    </div>
+    <div class="inv-sec">🪖 نیروی زمینی</div>
+    <div class="inv-grid">
+      ${unit("🪖","پیاده‌نظام",c.infantry,"نیروی انسانی")}
+      ${unit("🛡️","تانک",c.tanks,"زرهی")}
+    </div>
+    <div class="inv-sec">✈️ نیروی هوایی</div>
+    <div class="inv-grid">
+      ${unit("✈️","جنگنده",c.fighters,"F-16 / Su-35 / F-35")}
+      ${unit("🛸","پهپاد",c.drones||0,"TB2 / شاهد / Reaper")}
+    </div>
+    <div class="inv-sec">🚢 نیروی دریایی</div>
+    <div class="inv-grid">
+      ${unit("⚓","ناوشکن",c.destroyers||0,"محافظ ناوگان")}
+      ${unit("🚢","ناو هواپیمابر",c.ships,"قدرت دریایی")}
+    </div>
+    <div class="inv-sec">📦 منابع</div>
+    <div class="inv-grid">
+      ${unit("🛢️","نفت",r.oil||0,"سطح "+((r.lv&&r.lv.oil)||1))}
+      ${unit("⚙️","فولاد",r.steel||0,"سطح "+((r.lv&&r.lv.steel)||1))}
+      ${unit("🌾","غذا",r.food||0,"سطح "+((r.lv&&r.lv.food)||1))}
+      ${unit("☢️","اورانیوم",r.uranium||0,"سطح "+((r.lv&&r.lv.uranium)||1))}
+      ${unit("⚡","برق (تولید)",r.powerProd||0,"مصرف: "+(r.powerUse||0))}
+      ${unit("💰","خزانه",c.money,"میلیون دلار")}
+    </div>
+    <div class="inv-sec">🏭 ساختمان‌های اقتصادی</div>
+    <div class="inv-grid">
+      ${unit("🛢️","میدان نفت",lv("oil"),"سطح "+lv("oil"))}
+      ${unit("🏭","مجتمع صنعتی",lv("factory"),"سطح "+lv("factory"))}
+      ${unit("⚓","بندر",lv("port"),"سطح "+lv("port"))}
+      ${unit("🔬","فناوری",lv("tech"),"سطح "+lv("tech"))}
+      ${unit("⛏️","معدن",lv("mine"),"سطح "+lv("mine"))}
+      ${unit("🌾","کشاورزی",lv("farm"),"سطح "+lv("farm"))}
+      ${unit("🏦","بانک",lv("bank"),"سطح "+lv("bank"))}
+      ${unit("⚡","نیروگاه",lv("energy"),"سطح "+lv("energy"))}
+    </div>
+    <div class="inv-sec">⏳ در حال ساخت</div>
+    <div id="inv-queue" style="font-size:.78rem;color:var(--muted)"></div>
+  `;
+  const q=$("inv-queue");
+  if(q){
+    const items=S.queue||[];
+    if(!items.length) q.textContent="صف ساخت خالی است";
+    else q.innerHTML=items.map(i=>{
+      const left=Math.max(0,Math.ceil((i.duration-(Date.now()-i.start))/1000));
+      return `<div style="padding:8px;margin-bottom:6px;background:rgba(15,23,42,.9);border-radius:10px;border:1px solid rgba(148,163,184,.12)">${i.icon||"⏳"} ${i.label} — ${left}ث</div>`;
+    }).join("");
+  }
+}
+
+
+function normalizeStrat(){
+  if(!S.strat) S.strat=JSON.parse(JSON.stringify(STRAT));normalizeStrat();S.oilPrice=100;updateOilPrice();
+  S.strat.forEach(s=>{
+    if(s.open==null) s.open=true;
+    if(s.toll==null) s.toll=0;
+    if(s.oilImpact==null){
+      const def=STRAT.find(x=>x.id===s.id);
+      s.oilImpact=def?def.oilImpact:0.05;
+    }
+  });
+  if(S.oilPrice==null) S.oilPrice=100;
+}
+function oilPriceFactor(){
+  // closed straits raise oil price
+  let factor=1;
+  (S.strat||[]).forEach(s=>{
+    if(!s.open) factor += (s.oilImpact||0.05);
+    // high tolls mild increase
+    factor += Math.min(0.08,(s.toll||0)/500);
+  });
+  return factor;
+}
+function updateOilPrice(){
+  const base=100;
+  S.oilPrice=Math.round(base*oilPriceFactor());
+}
+function stratById(id){return (S.strat||[]).find(s=>s.id===id)}
+function toggleStrait(id){
+  const s=stratById(id); if(!s)return;
+  if(s.owner!==S.player){toast("فقط کشور صاحب تنگه می‌تواند باز/بسته کند");return}
+  s.open=!s.open;
+  updateOilPrice();
+  const st=s.open?"باز":"بسته";
+  news(S.countries[S.player].flag+" تنگه/کانال «"+s.name+"» را "+st+" کرد. قیمت نفت: "+S.oilPrice);
+  notify((s.open?"🟢":"🔴")+" "+s.name+" "+st+" شد · نفت "+S.oilPrice,"imp");
+  writeSave(); full(); rStrait();
+}
+function setStraitToll(id){
+  const s=stratById(id); if(!s)return;
+  if(s.owner!==S.player){toast("فقط صاحب تنگه می‌تواند عوارض بگذارد");return}
+  const cur=s.toll||0;
+  const steps=[0,5,10,15,20,30,40];
+  let n=steps.find(x=>x>cur);
+  if(n==null) n=0; // cycle
+  s.toll=n;
+  updateOilPrice();
+  news(S.countries[S.player].flag+" عوارض «"+s.name+"» را "+n+"M$ تعیین کرد.");
+  notify("💰 عوارض "+s.name+": "+n+"M$","ok");
+  toast("عوارض "+s.name+" = "+n+"M$");
+  writeSave(); full(); rStrait();
+}
+function attackStrait(id){
+  const s=stratById(id); if(!s)return;
+  if(s.owner===S.player){toast("نمی‌توانی به تنگه خودت حمله کنی");return}
+  if(S.globalCeasefire){toast("آتش‌بس جهانی فعال است");return}
+  const me=S.countries[S.player], own=S.countries[s.owner];
+  if(!own){toast("صاحب نامعتبر");return}
+  // need war or allow open hostility for strait raid
+  const rel=getRel(S.player,s.owner);
+  if(rel!=="war"){
+    if(!confirm("برای حمله به تنگه باید در جنگ باشید. اعلام جنگ شود؟"))return;
+    setRel(S.player,s.owner,"war");
+    news(me.flag+" به "+own.flag+" اعلام جنگ کرد (تنگه "+s.name+")");
+  }
+  const cost=80;
+  if(me.money<cost){toast("حداقل ۸۰M$ برای عملیات تنگه لازم است");return}
+  me.money-=cost;
+  const ap=power(me)*(0.7+Math.random()*0.5);
+  const dp=power(own)*(0.7+Math.random()*0.5);
+  let result="";
+  if(ap>dp*1.05){
+    // capture
+    const old=s.owner;
+    s.owner=S.player;
+    s.open=true;
+    s.toll=0;
+    result="✅ تصرف موفق «"+s.name+"» از "+S.countries[old].flag;
+    news(me.flag+" کنترل «"+s.name+"» را از "+S.countries[old].flag+" گرفت!");
+  } else if(ap>dp*0.85){
+    // force open
+    s.open=true;
+    s.toll=Math.max(0,Math.floor((s.toll||0)/2));
+    result="⚔️ حمله نیمه موفق — تنگه باز شد و عوارض کاهش یافت";
+    news(me.flag+" با حمله، «"+s.name+"» را به اجبار باز کرد.");
+  } else {
+    me.tanks=Math.max(0,me.tanks-2);
+    me.ships=Math.max(0,me.ships-1);
+    result="❌ حمله شکست خورد — تلفات وارد شد";
+    news(me.flag+" در حمله به «"+s.name+"» شکست خورد.");
+  }
+  updateOilPrice();
+  notify(result+" · نفت "+S.oilPrice, result.startsWith("✅")?"ok":"war");
+  toast(result);
+  writeSave(); full(); rStrait();
+}
+function collectStraitTolls(){
+  // each income tick: non-owners pay toll to owner if open
+  (S.strat||[]).forEach(s=>{
+    if(!s.open||!s.toll||s.toll<=0)return;
+    const owner=S.countries[s.owner]; if(!owner)return;
+    Object.values(S.countries).forEach(c=>{
+      if(c.id===s.owner)return;
+      if(c.money<=0)return;
+      const pay=Math.min(c.money,s.toll);
+      c.money-=pay;
+      owner.money+=pay;
+    });
+  });
+}
+function rStrait(){
+  const box=$("strait-list"); if(!box)return;
+  updateOilPrice();
+  const oilEl=$("oil-price-view");
+  if(oilEl) oilEl.textContent=String(S.oilPrice||100);
+  box.innerHTML=(S.strat||[]).map(s=>{
+    const own=S.countries[s.owner];
+    const isMine=s.owner===S.player;
+    const st=s.open?"🟢 باز":"🔴 بسته";
+    const toll=s.toll||0;
+    let actions="";
+    if(isMine){
+      actions=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <button class="abtn ${s.open?"b-red":"b-blue"}" style="margin:0;flex:1" onclick="toggleStrait('${s.id}')">${s.open?"بستن تنگه":"باز کردن تنگه"}</button>
+        <button class="abtn b-gold" style="margin:0;flex:1" onclick="setStraitToll('${s.id}')">💰 عوارض (${toll}M$)</button>
+      </div>`;
+    } else {
+      actions=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <button class="abtn b-red" style="margin:0;flex:1" onclick="attackStrait('${s.id}')">⚔️ حمله به تنگه</button>
+      </div>
+      <div style="font-size:.7rem;color:var(--muted);margin-top:4px">عوارض فعلی برای دیگران: ${toll}M$ / تیک</div>`;
+    }
+    return `<div class="sec-card" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:800">${s.icon||""} ${s.name}</div>
+        <div style="font-size:.75rem">${st}</div>
+      </div>
+      <div style="font-size:.78rem;margin-top:4px">🏳️ صاحب: ${own?own.flag+" "+own.name:"—"} · درآمد پایه +${s.bonus}M$</div>
+      <div style="font-size:.72rem;color:var(--muted)">تأثیر نفت: ${Math.round((s.oilImpact||0)*100)}٪ در صورت بسته بودن</div>
+      ${actions}
+    </div>`;
+  }).join("");
+}
+
+function mapFlyPlayer(){
+  if(!leafletMap||!S.player||!GEO[S.player])return;
+  const g=GEO[S.player];
+  leafletMap.flyTo([g.lat,g.lng],5,{duration:1.2});
+}
+function setMapStyle(style){
+  if(!leafletMap||!S._mapBases)return;
+  const b=S._mapBases;
+  Object.values(b).forEach(l=>{try{leafletMap.removeLayer(l)}catch(e){}});
+  let layer=b.street, msg="🛣️ مرزها";
+  if(style==="imagery"){layer=b.imagery||b.street; msg="🛰️ ماهواره"}
+  else if(style==="osm"){layer=b.osm||b.street; msg="🧭 OSM"}
+  layer.addTo(leafletMap);
+  S._mapCurrent=layer;
+  toast(msg);
+}
+
+function full(){
+  rHero();rList();rSel();rReqs();rQueue();rBtns();rDecls();rPrivList();rNews();rEcoLevels();rAttackPlanner();rNotifs();rWeather();
+  if($("panel-res")&&$("panel-res").classList.contains("show")) rRes();
+  if($("panel-inv")&&$("panel-inv").classList.contains("show")) rInv();
+}
+
+function select(id,opts){
+  S.selected=id;
+  const skipMap=opts&&opts.skipMap;
+  rHero();rList();rSel();rReqs();rQueue();rBtns();rDecls();rPrivList();rNews();rEcoLevels();rAttackPlanner();
+  if(!skipMap) rMap();
+}
+
+const PAGE_TITLES={army:"ارتش و تولید",war:"جنگ و عملیات",dip:"دیپلماسی",eco:"اقتصاد",decl:"بیانیه‌ها",pchat:"چت خصوصی",un:"سازمان ملل",rank:"رتبه‌بندی",spy:"جاسوسی",weather:"وضعیت هوا",map:"نقشه جهان",home:"خانه"};
+let _plTimer=null;
+function pageLoad(name, done){
+  const el=$("page-loader"), t=$("pl-text"), s=$("pl-sub");
+  if(t) t.textContent=(typeof PAGE_TITLES!=="undefined"&&PAGE_TITLES[name])?PAGE_TITLES[name]:"بارگذاری";
+  if(s) s.textContent="در حال آماده‌سازی...";
+  if(el){
+    el.classList.add("show");
+    el.style.display="flex";
+    el.style.pointerEvents="none"; // مهم: لودینگ کلیک را نگیرد
+  }
+  if(_plTimer) clearTimeout(_plTimer);
+  _plTimer=setTimeout(function(){
+    try{ if(typeof done==="function") done(); }catch(e){console.error("pageLoad",e)}
+    forceUnlockUI();
+  }, 280);
+}
+function forceUnlockUI(){
+  const el=$("page-loader");
+  if(!el) return;
+  el.classList.remove("show");
+  el.style.display="none";
+  el.style.pointerEvents="none";
+  el.style.opacity="0";
+}
+
+
+function openPanel(name){
+  pageLoad(name, function(){
+    try{
+    forceUnlockUI();
+    closePanel();
+    const pan=$("panel-"+name);
+    if(pan) pan.classList.add("show");
+    if(name==="map"){ rMap(); setTimeout(()=>{if(leafletMap) leafletMap.invalidateSize()},300); }
+    if(name==="war"||name==="dip") rTargetLists();
+    if(name==="pchat"){ rPrivList(); if(S.privTarget){ const a=$("priv-chat-area"); if(a)a.style.display="block"; rPrivMsgs(); } }
+    if(name==="decl") rDecls();
+    if(name==="eco") rEcoLevels();
+    if(name==="un"){
+      if(!S.unChat||!S.unChat.length){
+        S.unChat=[
+          {type:"system",text:"🏛️ تالار سازمان ملل متحد — سال ۲۰۲۶",time:Date.now()},
+          {type:"judge",text:"به نمایندگی از صلح جهانی، آماده بررسی اختلافات هستم. ⚖️",time:Date.now()}
+        ];
+      }
+      rUN();
+    }
+    if(name==="rank") rRank("power");
+    if(name==="spy") rSpyTargets();
+    if(name==="weather") rWeather();
+    if(name==="res"){S.resTab=S.resTab||"power"; rRes();}
+    if(name==="online"){fillFbForm();initFirebase();}
+    if(name==="inv") rInv();
+    if(name==="strait"){normalizeStrat();rStrait();}
+    }catch(err){ console.error(err); forceUnlockUI(); toast("خطا در باز کردن صفحه"); }
+  });
+}
+function closePanel(){document.querySelectorAll(".panel").forEach(p=>p.classList.remove("show"))}
+function goNav(p){
+  document.querySelectorAll(".bnav").forEach(b=>b.classList.remove("active"));
+  document.querySelector(`.bnav[data-p="${p}"]`)?.classList.add("active");
+  if(p==="home"){
+    pageLoad("home", function(){ closePanel(); });
+  } else if(p==="map"){
+    openPanel("map");
+  } else {
+    openPanel(p);
+  }
+}
+
+function sendDecl(){
+  const t=$("decl-text").value.trim();
+  if(!t){toast("متن بیانیه را بنویسید");return}
+  const p=S.countries[S.player];
+  S.decls.unshift({from:p.flag+" "+p.name,text:t,time:Date.now()});
+  chatAdd("📢 "+p.flag+" "+p.name,t,"dip");
+  log(p.flag+" بیانیه عمومی صادر کرد.","dip");
+  toast("بیانیه منتشر شد");
+  $("decl-text").value="";
+  rDecls();rChat();
+}
+function sendPublic(){const i=$("cinput");const t=i.value.trim();if(!t)return;const p=S.countries[S.player];chatAdd(p.flag+" "+p.name,t);i.value=""}
+function openPriv(id){S.privTarget=id;$("priv-chat-area").style.display="block";rPrivList();rPrivMsgs()}
+function sendPriv(){
+  if(!S.privTarget)return;
+  const i=$("priv-input");const t=i.value.trim();if(!t)return;
+  const key=[S.player,S.privTarget].sort().join("_");
+  if(!S.pms[key])S.pms[key]=[];
+  S.pms[key].push({from:S.player,to:S.privTarget,text:t,read:false,time:Date.now()});
+  i.value="";rPrivMsgs();
+  toast("پیام خصوصی ارسال شد");
+  // AI auto reply sometimes
+  if(Math.random()<0.4)setTimeout(()=>{
+    const replies=["پیام شما دریافت شد.","در حال بررسی هستیم.","بعداً پاسخ می‌دهیم.","متشکریم از پیام‌تان."];
+    S.pms[key].push({from:S.privTarget,to:S.player,text:replies[Math.floor(Math.random()*replies.length)],read:false,time:Date.now()});
+    if(S.privTarget)rPrivMsgs();
+  },2000+Math.random()*3000);
+}
+
+function sendRequest(type){
+  if(!S.selected||S.selected===S.player)return;
+  const rel=getRel(S.player,S.selected);
+  if((type==="ally"||type==="nap")&&rel!=="peace")return;
+  if(type==="peace"&&rel!=="war")return;
+  if(S.requests.some(r=>r.from===S.player&&r.to===S.selected&&r.type===type))return;
+  S.requests.push({from:S.player,to:S.selected,type,time:Date.now()});
+  const t=S.countries[S.selected],p=S.countries[S.player];
+  const labels={ally:"اتحاد",nap:"عدم تجاوز",peace:"آتش‌بس"};
+  log(p.flag+" درخواست "+labels[type]+" به "+t.flag+" ارسال کرد.","dip");
+  toast("درخواست ارسال شد");
+  setTimeout(()=>aiRespond(S.requests[S.requests.length-1]),2000+Math.random()*3500);
+  full();
+}
+function respondReq(idx,accept){
+  const r=S.requests[idx];if(!r||r.to!==S.player)return;
+  const from=S.countries[r.from],to=S.countries[r.to];
+  if(accept){
+    if(r.type==="ally")setRel(r.from,r.to,"ally");
+    if(r.type==="nap")setRel(r.from,r.to,"nap");
+    if(r.type==="peace")setRel(r.from,r.to,"peace");
+    log(to.flag+" درخواست را پذیرفت!","dip");toast("درخواست پذیرفته شد");
+  }else{log(to.flag+" درخواست را رد کرد.","imp");toast("درخواست رد شد")}
+  S.requests.splice(idx,1);refreshMapMarkers();full();
+}
+function aiRespond(r){
+  if(!r||!S.requests.includes(r))return;
+  const from=S.countries[r.from],to=S.countries[r.to];
+  let chance=r.type==="nap"?0.6:r.type==="peace"?(power(to)<power(from)*0.55?0.7:0.25):0.35+(power(from)/(power(to)+1))*0.15;
+  if(Math.random()<Math.min(0.8,chance)){
+    if(r.type==="ally")setRel(r.from,r.to,"ally");
+    if(r.type==="nap")setRel(r.from,r.to,"nap");
+    if(r.type==="peace")setRel(r.from,r.to,"peace");
+    log(to.flag+" درخواست شما را پذیرفت!","dip");toast(to.flag+" قبول کرد");
+  }else{log(to.flag+" درخواست شما را رد کرد.","imp");toast(to.flag+" رد کرد")}
+  S.requests=S.requests.filter(x=>x!==r);full();
+}
+
+
+
+function rAttackPlanner(){
+  const box=$("attack-planner");
+  if(!box)return;
+  const can=S.selected&&S.selected!==S.player&&isAlive(S.selected)&&getRel(S.player,S.selected)==="war";
+  box.style.display=can?"block":"none";
+  if(!can)return;
+  const p=S.countries[S.player];
+  const cities=CITIES[S.selected]||["پایتخت"];
+  const sel=$("atk-city");
+  sel.innerHTML=cities.map((c,i)=>`<option value="${i}">${c}</option>`).join("");
+  const units=[
+    {key:"infantry",label:"🪖 پیاده",max:p.infantry},
+    {key:"tanks",label:"🛡️ تانک",max:p.tanks},
+    {key:"fighters",label:"✈️ جنگنده",max:p.fighters},
+    {key:"drones",label:"🛸 پهپاد",max:p.drones||0},
+    {key:"destroyers",label:"⚓ ناوشکن",max:p.destroyers||0},
+    {key:"ships",label:"🚢 ناو",max:p.ships}
+  ];
+  const fi=$("force-inputs");
+  fi.innerHTML=units.map(u=>`<div class="force-row"><label>${u.label} (حداکثر ${fmt(u.max)})</label>
+    <input type="number" min="0" max="${u.max}" value="0" id="f-${u.key}" oninput="updForceSummary()"></div>`).join("");
+  updForceSummary();
+}
+function updForceSummary(){
+  const p=S.countries[S.player];
+  const get=(k)=>Math.max(0,Math.min(parseInt($("f-"+k)?.value||0,10)||0, p[k]||0));
+  const f={infantry:get("infantry"),tanks:get("tanks"),fighters:get("fighters"),drones:get("drones"),destroyers:get("destroyers"),ships:get("ships")};
+  const pow=Math.floor(f.infantry+f.tanks*4.5+f.fighters*5.5+f.drones*3.2+f.destroyers*5.5+f.ships*8);
+  const total=f.infantry+f.tanks+f.fighters+f.drones+f.destroyers+f.ships;
+  const s=$("force-summary");
+  if(s)s.textContent=total?`نیروی اعزامی: ${total} واحد · قدرت تقریبی ستون: ${fmt(pow)}`:"حداقل یک واحد انتخاب کنید";
+  const btn=$("btn-attack");
+  if(btn)btn.disabled=!total||!!S.battlePending;
+}
+function getForce(){
+  const p=S.countries[S.player];
+  const clamp=(k)=>{const v=Math.max(0,parseInt($("f-"+k)?.value||0,10)||0);return Math.min(v,p[k]||0)};
+  return {infantry:clamp("infantry"),tanks:clamp("tanks"),fighters:clamp("fighters"),drones:clamp("drones"),destroyers:clamp("destroyers"),ships:clamp("ships")};
+}
+
+function rTargetLists(){
+  const mk=(elId)=>{
+    const el=$(elId);if(!el)return;
+    el.innerHTML="";
+    Object.values(S.countries).filter(c=>c.id!==S.player&&isAlive(c.id)).sort((a,b)=>a.name.localeCompare(b.name,"fa")).forEach(c=>{
+      const rel=getRel(S.player,c.id);
+      let rt="صلح",rc="r-peace";
+      if(rel==="war"){rt="جنگ";rc="r-war"}else if(rel==="ally"){rt="متحد";rc="r-ally"}
+      else if(rel==="nap"){rt="عدم‌تجاوز";rc="r-nap"}
+      const row=document.createElement("div");
+      row.className="crow"+(S.selected===c.id?" sel":"");
+      row.innerHTML=`<span>${c.flag}</span><span>${c.name}</span><span class="rel ${rc}">${rt}</span>`;
+      row.onclick=()=>select(c.id);
+      el.appendChild(row);
+    });
+  };
+  mk("war-targets");mk("dip-targets");
+}
+
+let battleTimer=null;
+function attack(){
+  if(S.globalCeasefire||(S.ceasefireEnd&&Date.now()<S.ceasefireEnd)){toast("تا پایان آتش‌بس نمی‌توان حمله کرد");return}
+  if(!S.selected||getRel(S.player,S.selected)!=="war")return;
+  if(S.battlePending){toast("یک عملیات در حال اجراست");return}
+  const force=getForce();
+  const total=force.infantry+force.tanks+force.fighters+force.drones+force.destroyers+force.ships;
+  if(!total){toast("نیرویی انتخاب نشده");return}
+  const atk=S.countries[S.player], def=S.countries[S.selected];
+  const defId=S.selected;
+  const citySel=$("atk-city");
+  const cityName=(CITIES[defId]||["پایتخت"])[parseInt(citySel?.value||0,10)]||"پایتخت";
+  // lock / deduct committed forces immediately
+  atk.infantry-=force.infantry; atk.tanks-=force.tanks; atk.fighters-=force.fighters;
+  atk.drones=(atk.drones||0)-force.drones; atk.destroyers=(atk.destroyers||0)-force.destroyers; atk.ships-=force.ships;
+  S.battlePending=true;
+  S.pendingForce={force,defId,cityName,aId:S.player};writeSave();
+  const wait=120000+Math.floor(Math.random()*60000);
+  const endAt=Date.now()+wait;
+  toast("حمله به "+cityName+" آغاز شد");
+  news("⚔️ "+atk.flag+" به شهر «"+cityName+"» در "+def.flag+" حمله کرد");
+  log(atk.flag+" ستون نظامی به سمت "+cityName+" ("+def.flag+") اعزام کرد.","war");
+  const rep=$("battle-report");
+  if(rep){
+    rep.innerHTML=`<div style="color:var(--gold)">⏳ عملیات علیه ${def.flag} — شهر ${cityName}</div>
+    <div style="margin-top:6px;font-size:.72rem">نیروی اعزامی: 🪖${force.infantry} 🛡️${force.tanks} ✈️${force.fighters} 🛸${force.drones} ⚓${force.destroyers} 🚢${force.ships}</div>
+    <div id="battle-eta">زمان تقریبی: ${Math.ceil(wait/60000)} دقیقه</div>`;
+  }
+  if(typeof battleTimer!=="undefined"&&battleTimer)clearInterval(battleTimer);
+  battleTimer=setInterval(()=>{
+    const left=Math.max(0,endAt-Date.now());
+    const eta=$("battle-eta");
+    if(eta)eta.innerHTML="⏱ زمان باقی‌مانده: <span class=\"timer-precise\">"+formatRemain(left)+"</span>";
+    if(left<=0){clearInterval(battleTimer);resolveBattle()}
+  },1000);
+  full();
+}
+
+function resolveBattle(){
+  S.battlePending=false;
+  const pending=S.pendingForce;
+  if(!pending){const r=$("battle-report");if(r)r.innerHTML="عملیات نامعتبر.";return}
+  const aId=pending.aId, dId=pending.defId, force=pending.force, cityName=pending.cityName;
+  S.pendingForce=null;
+  const a=S.countries[aId], d=S.countries[dId];
+  if(!a||!d){return}
+  const ww=w();
+  // Attack power = only committed force
+  const landM=(ww.land||100)/100, airM=(ww.air||100)/100, navM=(ww.naval||100)/100;
+  const ap=((force.infantry+force.tanks*4.8)*landM+(force.fighters*5.5+force.drones*3.5)*airM+(force.destroyers*5.5+force.ships*7.5)*navM)*a.tech*ww.milMod*(0.85+Math.random()*0.3);
+  // Defense = portion of defender army (city garrison ~55-75%)
+  const g=0.55+Math.random()*0.2;
+  const dp=((d.infantry*g*1.15+d.tanks*g*4.5)*landM+(d.fighters*g*5.2+(d.drones||0)*g*3.2)*airM+((d.destroyers||0)*g*5.2+d.ships*g*7)*navM)*d.tech*ww.milMod*(0.85+Math.random()*0.3);
+  const ratio=ap/(dp||1);
+  let am=ratio>1.4?0.12:ratio>1?0.2:ratio>0.75?0.28:0.4;
+  let dm=ratio>1.4?0.3:ratio>1?0.22:ratio>0.75?0.16:0.08;
+  const lossF=(f,m)=>({
+    infantry:Math.floor(f.infantry*m),
+    tanks:Math.floor(f.tanks*m*0.9),
+    fighters:Math.floor(f.fighters*m*0.85),
+    drones:Math.floor(f.drones*m*0.8),
+    destroyers:Math.floor(f.destroyers*m*0.75),
+    ships:Math.floor(f.ships*m*0.7)
+  });
+  const lA=lossF(force,am*(0.85+Math.random()*0.3));
+  // survivors return home
+  const ret={
+    infantry:force.infantry-lA.infantry,
+    tanks:force.tanks-lA.tanks,
+    fighters:force.fighters-lA.fighters,
+    drones:force.drones-lA.drones,
+    destroyers:force.destroyers-lA.destroyers,
+    ships:force.ships-lA.ships
+  };
+  a.infantry+=ret.infantry;a.tanks+=ret.tanks;a.fighters+=ret.fighters;
+  a.drones=(a.drones||0)+ret.drones;a.destroyers=(a.destroyers||0)+ret.destroyers;a.ships+=ret.ships;
+  // defender losses (garrison fraction)
+  const lD={
+    infantry:Math.floor(d.infantry*g*dm),
+    tanks:Math.floor(d.tanks*g*dm*0.9),
+    fighters:Math.floor(d.fighters*g*dm*0.85),
+    drones:Math.floor((d.drones||0)*g*dm*0.8),
+    destroyers:Math.floor((d.destroyers||0)*g*dm*0.75),
+    ships:Math.floor(d.ships*g*dm*0.7)
+  };
+  d.infantry=Math.max(0,d.infantry-lD.infantry);
+  d.tanks=Math.max(0,d.tanks-lD.tanks);
+  d.fighters=Math.max(0,d.fighters-lD.fighters);
+  d.drones=Math.max(0,(d.drones||0)-lD.drones);
+  d.destroyers=Math.max(0,(d.destroyers||0)-lD.destroyers);
+  d.ships=Math.max(0,d.ships-lD.ships);
+  let resultTitle,resultColor,loot=0;
+  if(ratio>1.05){
+    resultTitle="✅ تصرف موفقیت‌آمیز — "+cityName; resultColor="var(--green)";
+    loot=Math.floor(d.money*(0.08+Math.random()*0.1));
+    a.money+=loot;d.money=Math.max(0,d.money-loot);
+    d.income=Math.max(1,d.income-Math.floor(d.income*0.04));
+    a.income+=Math.max(1,Math.floor(d.income*0.02));
+    S.strat.forEach(s=>{if(s.owner===dId&&Math.random()<0.25){s.owner=aId;news("🚩 "+a.flag+" کنترل «"+s.name+"» را گرفت")}});
+    news("⚔️ "+a.flag+" شهر «"+cityName+"» را در "+d.flag+" تصرف کرد");
+  } else if(ratio>0.75){
+    resultTitle="⚖️ نبرد فرسایشی — "+cityName; resultColor="var(--gold)";
+    news("⚔️ نبرد سنگین بر سر «"+cityName+"» بدون برنده قطعی");
+  } else {
+    resultTitle="❌ شکست حمله — "+cityName; resultColor="var(--red)";
+    news("⚔️ حمله "+a.flag+" به «"+cityName+"» دفع شد");
+  }
+  if(!isAlive(dId)){d.income=Math.max(1,d.income*0.3);news("💥 "+d.flag+" توان رزمی خود را از دست داد")}
+  const line=(L)=>`🪖${L.infantry||0} · 🛡️${L.tanks||0} · ✈️${L.fighters||0} · 🛸${L.drones||0} · ⚓${L.destroyers||0} · 🚢${L.ships||0}`;
+  const rep=$("battle-report");
+  if(rep){
+    rep.innerHTML=`<div style="color:${resultColor};font-weight:700;font-size:.9rem;margin-bottom:8px">${resultTitle}</div>
+    <div>هدف: ${d.flag} — شهر ${cityName}</div>
+    <div style="margin-top:8px;color:#93c5fd">تلفات ستون شما</div>
+    <div>${line(lA)}</div>
+    <div style="margin-top:4px;font-size:.7rem;color:var(--muted)">بازماندگان به کشور بازگشتند: ${line(ret)}</div>
+    <div style="margin-top:6px;color:#fca5a5">تلفات برآوردی پادگان دشمن</div>
+    <div>${line(lD)}</div>
+    ${loot?`<div style="margin-top:8px;color:var(--gold)">غنیمت: ${fmt(loot)}M$ · آسیب به اقتصاد محلی</div>`:""}
+    <div style="margin-top:8px;font-size:.7rem;color:var(--muted)">گزارش ستاد کل عملیات</div>`;
+  }
+  log(a.flag+" گزارش حمله به "+cityName+": "+resultTitle,"war");
+  writeSave();
+  full();checkEnd();
+}
+
+function declareWar(){if(!S.selected)return;if(S.globalCeasefire||(S.ceasefireEnd&&Date.now()<S.ceasefireEnd)){toast("آتش‌بس یک‌هفته‌ای هنوز فعال است");return}const t=S.countries[S.selected],prev=getRel(S.player,S.selected);if(prev==="war")return;setRel(S.player,S.selected,"war");const p=S.countries[S.player];if(prev==="ally"){p.money-=40;log(p.flag+" اتحاد را شکست و اعلام جنگ کرد!","war")}else log(p.flag+" علیه "+t.flag+" اعلام جنگ کرد!","war");news("🚨 "+p.flag+" علیه "+t.flag+" اعلام جنگ رسمی کرد!");chatAdd(p.flag+" "+p.name,"بیانیه جنگی: از این لحظه در جنگ با "+t.name+" هستیم.","dip");Object.keys(S.countries).forEach(id=>{if(id!==S.player&&id!==S.selected&&isAlive(id)&&getRel(id,S.selected)==="ally"&&getRel(id,S.player)!=="war"&&Math.random()<0.28){setRel(id,S.player,"war");log(S.countries[id].flag+" وارد جنگ شد!","war")}});writeSave();refreshMapMarkers();full()}
+/* attack replaced by delayed operations */
+function doBattle(aId,dId){const a=S.countries[aId],d=S.countries[dId];if(!isAlive(aId)||!isAlive(dId))return;const ww=w();const ap=(a.infantry+a.tanks*4.8+a.fighters*5.5+(a.drones||0)*3.5+(a.destroyers||0)*5.5+a.ships*7.5)*a.tech*ww.milMod*(0.85+Math.random()*0.3);const dp=(d.infantry*1.1+d.tanks*4.5+d.fighters*5.2+(d.drones||0)*3.2+(d.destroyers||0)*5.2+d.ships*7)*d.tech*ww.milMod*(0.85+Math.random()*0.3);const ratio=ap/(dp||1);let am=ratio>1.4?0.09:ratio>1?0.15:ratio>0.7?0.2:0.3,dm=ratio>1.4?0.35:ratio>1?0.24:ratio>0.7?0.18:0.1;const lose=(c,m)=>{c.infantry=Math.max(0,c.infantry-Math.floor(c.infantry*m));c.tanks=Math.max(0,c.tanks-Math.floor(c.tanks*m*.9));c.fighters=Math.max(0,c.fighters-Math.floor(c.fighters*m*.85));c.drones=Math.max(0,(c.drones||0)-Math.floor((c.drones||0)*m*.8));c.destroyers=Math.max(0,(c.destroyers||0)-Math.floor((c.destroyers||0)*m*.75));c.ships=Math.max(0,c.ships-Math.floor(c.ships*m*.7))};lose(a,am*(0.8+Math.random()*0.4));lose(d,dm*(0.8+Math.random()*0.4));if(ratio>1){const loot=Math.floor(d.money*(0.12+Math.random()*0.12));a.money+=loot;d.money=Math.max(0,d.money-loot);log(a.flag+" پیروز شد. غنیمت "+fmt(loot)+"M$","ok");news("⚔️ "+a.flag+" در نبرد با "+d.flag+" پیروز شد");S.strat.forEach(s=>{if(s.owner===dId&&Math.random()<0.35){s.owner=aId;log(a.flag+" کنترل «"+s.name+"» را گرفت!","imp")}})}else log(a.flag+" تلفات داد.","war");if(!isAlive(dId)){log(d.flag+" سقوط کرد!","war");d.income=Math.max(1,d.income*0.3)}}
+
+const ECO_META={
+  oil:{base:160,inc:10,time:150,name:"میدان نفت",icon:"🛢️"},
+  factory:{base:140,inc:8,time:120,name:"مجتمع صنعتی",icon:"🏭"},
+  port:{base:200,inc:12,time:180,name:"بندر تجاری",icon:"⚓"},
+  tech:{base:280,inc:6,time:240,name:"مرکز فناوری",icon:"🔬"},
+  mine:{base:120,inc:7,time:100,name:"معدن",icon:"⛏️"},
+  farm:{base:100,inc:5,time:90,name:"کشاورزی",icon:"🌾"},
+  bank:{base:250,inc:14,time:180,name:"بانک مرکزی",icon:"🏦"},
+  energy:{base:170,inc:9,time:130,name:"نیروگاه",icon:"⚡"}
+};
+const ECO_MAX=5;
+function ecoLvOf(p,k){return (p.eco&&p.eco[k])||0}
+function ecoCostOf(base,lv){return Math.floor(base*Math.pow(1.65,lv))}
+function ecoIncOf(base,lv){return base+(lv*Math.floor(base*0.45))}
+function ecoTimeOf(baseSec,lv){return (baseSec+lv*20)*1000}
+function isEcoQueued(type){return (S.queue||[]).some(i=>i.type===type)}
+function anyEcoQueued(){return (S.queue||[]).some(i=>ECO_META[i.type])}
+function rEcoLevels(){
+  if(!S.player||!S.countries[S.player])return;
+  const p=S.countries[S.player];
+  if(!p.eco)p.eco={};
+  const st=$("eco-status");
+  const busy=anyEcoQueued();
+  if(st){
+    st.innerHTML = busy
+      ? '⏳ یک پروژه اقتصادی در صف است — تا اتمام آن پروژه جدید قفل است.'
+      : 'هر ارتقا درآمد دائمی اضافه می‌کند. سطح فعلی / قیمت / زمان / درآمد اضافه نمایش داده می‌شود.';
+  }
+  Object.keys(ECO_META).forEach(k=>{
+    const m=ECO_META[k];
+    const lv=ecoLvOf(p,k);
+    const btn=$(k==="factory"?"b-fac":k==="energy"?"b-energy":("b-"+k));
+    // button ids: b-oil, b-fac, b-port, b-tech, b-mine, b-farm, b-bank, b-energy
+    const map={oil:"b-oil",factory:"b-fac",port:"b-port",tech:"b-tech",mine:"b-mine",farm:"b-farm",bank:"b-bank",energy:"b-energy"};
+    const b=$(map[k]);
+    const cs=$("eco-cs-"+k), tm=$("eco-tm-"+k);
+    if(lv>=ECO_MAX){
+      if(cs) cs.textContent="سطح ۵ (حداکثر)";
+      if(tm) tm.textContent="ارتقا کامل شد";
+      if(b) b.disabled=true;
+      return;
+    }
+    const cost=ecoCostOf(m.base,lv);
+    const inc=ecoIncOf(m.inc,lv);
+    const sec=Math.round(ecoTimeOf(m.time,lv)/1000);
+    const queued=isEcoQueued(k);
+    if(cs) cs.textContent=`سطح ${lv}→${lv+1} · ${cost}M$ · +${inc}M$ درآمد`;
+    if(tm) tm.textContent=queued?`⏳ در حال ساخت...`:`⏱ ${sec} ثانیه`;
+    if(b){
+      b.disabled = p.money<cost || queued || busy;
+      if(queued) b.style.opacity=".55";
+      else b.style.opacity="";
+    }
+  });
+  // eco queue display
+  const eq=$("eco-queue");
+  if(eq){
+    const items=(S.queue||[]).filter(i=>ECO_META[i.type]);
+    if(!items.length) eq.textContent="خالی";
+    else eq.innerHTML=items.map(i=>{
+      const left=Math.max(0, Math.ceil((i.duration-(Date.now()-i.start))/1000));
+      return `<div style="padding:8px;margin-bottom:6px;background:var(--card2);border-radius:10px;border:1px solid var(--border)">${i.icon||""} ${i.label} — ⏳ ${left}ث باقی‌مانده</div>`;
+    }).join("");
+  }
+}
+
+function build(type){const p=S.countries[S.player];const ecoLv=(k)=> (p.eco&&p.eco[k])||0;
+const ecoCost=(base,lv)=>Math.floor(base*Math.pow(1.65,lv));
+const ecoInc=(base,lv)=>base+(lv*Math.floor(base*0.45));
+const D={
+inf:{c:45,d:45000,i:"🪖",l:"پیاده‌نظام",f:()=>{p.infantry+=75}},
+tank:{c:130,d:90000,i:"🛡️",l:"تانک",f:()=>{p.tanks+=22}},
+fighter:{c:190,d:120000,i:"✈️",l:"F-16 جنگنده",f:()=>{p.fighters+=14}},
+fighter2:{c:280,d:160000,i:"🛩️",l:"Su-35 برتری هوایی",f:()=>{p.fighters+=10;p.tech=Math.min(1.6,p.tech+0.01)}},
+fighter3:{c:420,d:220000,i:"🛫",l:"F-35 نسل پنجم",f:()=>{p.fighters+=8;p.tech=Math.min(1.65,p.tech+0.02)}},
+drone:{c:95,d:70000,i:"🛸",l:"Bayraktar TB2",f:()=>{p.drones=(p.drones||0)+18}},
+drone2:{c:75,d:55000,i:"🛸",l:"Shahed-136",f:()=>{p.drones=(p.drones||0)+25}},
+drone3:{c:160,d:100000,i:"🛰️",l:"MQ-9 Reaper",f:()=>{p.drones=(p.drones||0)+12;p.tech=Math.min(1.65,p.tech+0.01)}},
+drone4:{c:130,d:90000,i:"✈️",l:"Orion/شاهد۱۴۹",f:()=>{p.drones=(p.drones||0)+10}},
+destroyer:{c:210,d:140000,i:"⚓",l:"ناوشکن",f:()=>{p.destroyers=(p.destroyers||0)+8}},
+ship:{c:350,d:220000,i:"🚢",l:"ناو هواپیمابر",f:()=>{p.ships+=5}},
+oil:{c:ecoCost(160,ecoLv("oil")),d:(150+ecoLv("oil")*20)*1000,i:"🛢️",l:"میدان نفت L"+(ecoLv("oil")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("oil");p.income+=ecoInc(10,lv);p.eco.oil=lv+1;news(p.flag+" میدان نفت سطح "+(lv+1)+" ساخت")}},
+factory:{c:ecoCost(140,ecoLv("factory")),d:(120+ecoLv("factory")*20)*1000,i:"🏭",l:"مجتمع صنعتی L"+(ecoLv("factory")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("factory");p.income+=ecoInc(8,lv);p.industry+=6+lv*2;p.eco.factory=lv+1;news(p.flag+" مجتمع صنعتی سطح "+(lv+1))}},
+port:{c:ecoCost(200,ecoLv("port")),d:(180+ecoLv("port")*20)*1000,i:"⚓",l:"بندر تجاری L"+(ecoLv("port")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("port");p.income+=ecoInc(12,lv);p.eco.port=lv+1;news(p.flag+" بندر سطح "+(lv+1))}},
+tech:{c:ecoCost(280,ecoLv("tech")),d:(240+ecoLv("tech")*20)*1000,i:"🔬",l:"مرکز فناوری L"+(ecoLv("tech")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("tech");p.income+=ecoInc(6,lv);p.tech=Math.min(1.7,p.tech+0.03+lv*0.01);p.eco.tech=lv+1;news(p.flag+" مرکز فناوری سطح "+(lv+1))}},
+mine:{c:ecoCost(120,ecoLv("mine")),d:(100+ecoLv("mine")*20)*1000,i:"⛏️",l:"معدن L"+(ecoLv("mine")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("mine");p.income+=ecoInc(7,lv);p.industry+=3;p.eco.mine=lv+1;news(p.flag+" معدن سطح "+(lv+1))}},
+farm:{c:ecoCost(100,ecoLv("farm")),d:(90+ecoLv("farm")*20)*1000,i:"🌾",l:"کشاورزی L"+(ecoLv("farm")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("farm");p.income+=ecoInc(5,lv);p.eco.farm=lv+1;news(p.flag+" مجتمع کشاورزی سطح "+(lv+1))}},
+bank:{c:ecoCost(250,ecoLv("bank")),d:(180+ecoLv("bank")*20)*1000,i:"🏦",l:"بانک L"+(ecoLv("bank")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("bank");p.income+=ecoInc(14,lv);p.eco.bank=lv+1;news(p.flag+" بانک سطح "+(lv+1))}},
+energy:{c:ecoCost(170,ecoLv("energy")),d:(130+ecoLv("energy")*20)*1000,i:"⚡",l:"نیروگاه L"+(ecoLv("energy")+1),f:()=>{if(!p.eco)p.eco={};const lv=ecoLv("energy");p.income+=ecoInc(9,lv);p.industry+=4;p.eco.energy=lv+1;news(p.flag+" نیروگاه سطح "+(lv+1))}}
+};
+const d=D[type];
+if(!d){toast("نوع ساخت نامعتبر");return}
+// eco locks
+if(ECO_META[type]){
+  if(ecoLvOf(p,type)>=ECO_MAX){toast("این ساختمان به حداکثر سطح رسیده");return}
+  if(isEcoQueued(type)){toast("همین پروژه الان در صف ساخت است");return}
+  if(anyEcoQueued()){toast("تا پایان ساخت اقتصادی فعلی صبر کنید");return}
+}
+if(p.money<d.c){toast("پول کافی نیست — نیاز: "+d.c+"M$");return}
+const needSteel={tank:40,fighter:30,fighter2:50,fighter3:80,destroyer:60,ship:100,drone3:20};
+const needOil={fighter:15,fighter2:25,fighter3:40,tank:10};
+const rs=ensureRes(p);
+if(needSteel[type]&&rs.steel<needSteel[type]){toast("فولاد کم است — نیاز "+needSteel[type]);return}
+if(needOil[type]&&rs.oil<needOil[type]){toast("نفت کم است — نیاز "+needOil[type]);return}
+if(needSteel[type]) rs.steel-=needSteel[type];
+if(needOil[type]) rs.oil-=needOil[type];
+p.money-=d.c;
+S.queue.push({icon:d.i,label:d.l,start:Date.now(),duration:d.d,fn:d.f,type:type});
+const sec=Math.round(d.d/1000);
+log(p.flag+" ساخت «"+d.l+"» شروع شد ("+d.c+"M$ · "+sec+"ث).","ok");
+notify("✅ خرید ثبت شد: "+d.l+" — مدت "+sec+"ث","ok");
+toast("✅ خرید ثبت شد · "+sec+"ث");
+if(typeof showBuyFlash==="function") showBuyFlash(d.l+" · "+sec+"ث");
+writeSave();full();rEcoLevels();
+}
+function processQueue(){
+  const n=Date.now();
+  let changed=false;
+  S.queue=S.queue.filter(i=>{
+    // restore fn after load
+    if(typeof i.fn!=="function" && i.type){i.fn=rebuildFn(i.type)}
+    if(typeof i.fn!=="function")return false;
+    if(n-i.start>=i.duration){
+      try{i.fn()}catch(e){console.error(e)}
+      log("✅ «"+i.label+"» آماده شد!","ok");
+      toast(i.label+" آماده شد");
+      changed=true;
+      return false;
+    }
+    return true;
+  });
+  if(changed) writeSave(true);
+  rQueue();rEcoLevels();
+}
+function rebuildFn(type){
+  const p=S.countries[S.player];
+  if(!p)return ()=>{};
+  const ecoLv=(k)=>(p.eco&&p.eco[k])||0;
+  const ecoInc=(base,lv)=>base+(lv*Math.floor(base*0.45));
+  const map={
+    inf:()=>{p.infantry+=75},
+    tank:()=>{p.tanks+=22},
+    fighter:()=>{p.fighters+=14},
+    fighter2:()=>{p.fighters+=10;p.tech=Math.min(1.6,p.tech+0.01)},
+    fighter3:()=>{p.fighters+=8;p.tech=Math.min(1.65,p.tech+0.02)},
+    drone:()=>{p.drones=(p.drones||0)+18},
+    drone2:()=>{p.drones=(p.drones||0)+25},
+    drone3:()=>{p.drones=(p.drones||0)+12;p.tech=Math.min(1.65,p.tech+0.01)},
+    drone4:()=>{p.drones=(p.drones||0)+10},
+    destroyer:()=>{p.destroyers=(p.destroyers||0)+8},
+    ship:()=>{p.ships+=5},
+    oil:()=>{if(!p.eco)p.eco={};const lv=ecoLv("oil");p.income+=ecoInc(10,lv);p.eco.oil=lv+1},
+    factory:()=>{if(!p.eco)p.eco={};const lv=ecoLv("factory");p.income+=ecoInc(8,lv);p.industry+=6+lv*2;p.eco.factory=lv+1},
+    port:()=>{if(!p.eco)p.eco={};const lv=ecoLv("port");p.income+=ecoInc(12,lv);p.eco.port=lv+1},
+    tech:()=>{if(!p.eco)p.eco={};const lv=ecoLv("tech");p.income+=ecoInc(6,lv);p.tech=Math.min(1.7,p.tech+0.03+lv*0.01);p.eco.tech=lv+1},
+    mine:()=>{if(!p.eco)p.eco={};const lv=ecoLv("mine");p.income+=ecoInc(7,lv);p.industry+=3;p.eco.mine=lv+1},
+    farm:()=>{if(!p.eco)p.eco={};const lv=ecoLv("farm");p.income+=ecoInc(5,lv);p.eco.farm=lv+1},
+    bank:()=>{if(!p.eco)p.eco={};const lv=ecoLv("bank");p.income+=ecoInc(14,lv);p.eco.bank=lv+1},
+    energy:()=>{if(!p.eco)p.eco={};const lv=ecoLv("energy");p.income+=ecoInc(9,lv);p.industry+=4;p.eco.energy=lv+1}
+  };
+  return map[type]||(()=>{});
+}
+
+function breakTreaty(){if(!S.selected)return;const r=getRel(S.player,S.selected);if(r!=="ally"&&r!=="nap")return;setRel(S.player,S.selected,"peace");log("پیمان فسخ شد.","dip");toast("پیمان فسخ شد");full()}
+function changeWeather(){S.weather=Math.floor(Math.random()*WEATHERS.length);const ww=w();log("تغییر آب‌وهوا: "+ww.icon+" "+ww.name+" — "+(ww.effect||ww.desc),"imp");notify(ww.icon+" "+ww.name+": "+(ww.effect||""),"imp",{silent:true});full()}
+function aiTick(){if(!S.started)return;const ais=alive().filter(id=>id!==S.player);if(Math.random()<0.35){const id=ais[Math.floor(Math.random()*ais.length)];if(!id||!isAlive(id))return;const c=S.countries[id];const en=alive().filter(o=>getRel(id,o)==="war");if(en.length&&Math.random()<0.5&&power(c)>60)doBattle(id,en[Math.floor(Math.random()*en.length)]);else if(Math.random()<0.12){if(c.money>300&&Math.random()<0.3){c.money-=95;c.drones=(c.drones||0)+12}else if(c.money>200&&Math.random()<0.5){c.money-=130;c.tanks+=15}else if(c.money>100){c.money-=45;c.infantry+=60}}}full();checkEnd()}
+function incomeTick(){if(!S.started)return;Object.values(S.countries).forEach(c=>{if(isAlive(c.id))c.money+=incomeOf(c)});if(Math.random()<0.12){S.season=(S.season+1)%4;if(S.season===0)S.year++}tickResources();collectStraitTolls();updateOilPrice();if(Math.random()<0.15)changeWeather();tickEvents();if(S.onlineRoom)syncMyState();writeSave(true);full()}
+function checkEnd(){if(!isAlive(S.player)){showEnd(false,"نیروهای شما نابود شد.");return}if(alive().filter(id=>id!==S.player).length===0)showEnd(true,"شما تنها قدرت باقی‌مانده هستید.");const p=S.countries[S.player];const tot=alive().reduce((s,id)=>s+power(S.countries[id]),0);if(power(p)>tot*0.42&&S.year>2028)showEnd(true,"با برتری قاطع پیروز شدید.")}
+function showEnd(w,m){$("end-t").textContent=w?"🏆 پیروزی":"💀 شکست";$("end-t").style.color=w?"#34d399":"#f87171";$("end-m").textContent=m;$("end").style.display="flex"}
+
+
+function startGame(){
+  // 1) UI FIRST — even if later code fails
+  try{
+    if(!window.S){ window.S = {player:null}; }
+    if(!S.player){
+      var sel = document.querySelector('.ccard.sel');
+      if(sel) S.player = sel.getAttribute('data-id');
+    }
+    if(!S.player){ alert('اول یک کشور انتخاب کن'); return; }
+
+    var st = document.getElementById('start');
+    var gm = document.getElementById('game');
+    var ld = document.getElementById('loading');
+    if(ld){ ld.style.display='none'; ld.style.pointerEvents='none'; }
+    if(st) st.style.display = 'none';
+    if(gm){ gm.style.display = 'flex'; gm.style.visibility='visible'; gm.style.opacity='1'; }
+
+    // 2) init data
+    if(typeof C === 'undefined'){ alert('داده کشورها لود نشد'); return; }
+    S.countries = JSON.parse(JSON.stringify(C));
+    Object.values(S.countries).forEach(function(c){
+      if(c.drones==null) c.drones = Math.max(5, Math.floor((c.fighters||0)/3));
+      if(c.destroyers==null) c.destroyers = Math.max(2, Math.floor((c.ships||0)/2));
+      if(!c.eco) c.eco = {};
+      try{ if(typeof ensureRes==='function') ensureRes(c); }catch(e){}
+    });
+    try{ S.relations = JSON.parse(JSON.stringify(REL)); }catch(e){ S.relations = {}; }
+    try{ S.strat = JSON.parse(JSON.stringify(STRAT)); if(typeof normalizeStrat==='function') normalizeStrat(); }catch(e){ S.strat=[]; }
+    S.oilPrice = 100;
+    try{ if(typeof updateOilPrice==='function') updateOilPrice(); }catch(e){}
+    S.queue=[]; S.requests=[]; S.log=[]; S.chat=[]; S.decls=[]; S.pms={}; S.news=[]; S.notifs=[];
+    S.intel={}; S.currentEvent=null; S.rankMode='power'; S.battlePending=false; S.pendingForce=null;
+    S.selected=null; S.privTarget=null; S.year=2026; S.season=0; S.weather=1;
+    S.started=true; S.globalCeasefire=true; S.ceasefireEnd=Date.now()+7*24*60*60*1000;
+
+    var p = S.countries[S.player];
+    try{ if(typeof log==='function') log('آتش‌بس ۷ روزه فعال. رهبری '+(p?p.flag:'')+' '+(p?p.name:S.player), 'imp'); }catch(e){}
+    try{ if(typeof chatAdd==='function'){ chatAdd('سیستم','🔥 اتاق جنگ باز شد.','system'); } }catch(e){}
+    try{ if(typeof news==='function') news('🕊️ آتش‌بس یک‌هفته‌ای جهانی آغاز شد'); }catch(e){}
+    try{ if(typeof writeSave==='function') writeSave(true); }catch(e){}
+    try{ if(typeof full==='function') full(); }catch(e){}
+    try{ if(typeof updateTimers==='function') updateTimers(); }catch(e){}
+
+    // intervals once
+    if(!window.__wwIntervals){
+      window.__wwIntervals=true;
+      try{ setInterval(function(){ try{ processQueue(); }catch(e){} }, 1000); }catch(e){}
+      try{ setInterval(function(){ try{ incomeTick(); }catch(e){} }, 10000); }catch(e){}
+      try{ setInterval(function(){ try{ aiTick(); }catch(e){} }, 8000); }catch(e){}
+      try{ setInterval(function(){ try{ rQueue(); }catch(e){} }, 1000); }catch(e){}
+      try{ setInterval(function(){ try{ updateTimers(); }catch(e){} }, 1000); }catch(e){}
+    }
+    try{ if(typeof triggerWorldEvent==='function') setTimeout(function(){ triggerWorldEvent('market_boom'); }, 8000); }catch(e){}
+  }catch(err){
+    console.error(err);
+    alert('خطا در شروع: '+(err && err.message ? err.message : err));
+  }
+}
+window.startGame = startGame;
+
+
+// --- robust start / lock ---
+function bindStartBtn(){
+  const b=$("btn-go");
+  if(!b) return;
+  b.disabled = !S.player;
+  b.onclick=function(ev){
+    if(ev){ try{ev.preventDefault();ev.stopPropagation();}catch(e){} }
+    if(!S.player){ alert("اول یک کشور را انتخاب کن"); return false; }
+    // همیشه بازی جدید مگر کاربر صریحا ادامه بخواهد
+    try{
+      const save=loadSave();
+      if(save && save.player===S.player && save.countries){
+        if(confirm("ذخیره قبلی برای این کشور هست. ادامه بدهم؟")){
+          resumeGame(save); return false;
+        }
+      }
+      startGame();
+    }catch(e){
+      console.error(e);
+      alert("خطا: "+e.message);
+    }
+    return false;
+  };
+}
+bindStartBtn();
+document.addEventListener("DOMContentLoaded", bindStartBtn);
+window.startGame = startGame;
+window.bindStartBtn = bindStartBtn;
+try{ $("cinput") && ($("cinput").onkeydown = e => { if(e.key==="Enter") sendPublic(); }); }catch(e){}
+try{ $("priv-input") && ($("priv-input").onkeydown = e => { if(e.key==="Enter") sendPriv(); }); }catch(e){}
+
+function bootFromSave(){
+  const save = loadSave();
+  if(!save || !save.player || !C[save.player]) return false;
+  S.player = save.player;
+  // note
+  if(!document.getElementById("lock-note")){
+    const note = document.createElement("div");
+    note.id = "lock-note";
+    note.style.cssText = "background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:var(--gold);padding:10px 14px;border-radius:12px;font-size:.8rem;margin-bottom:12px;text-align:center;max-width:420px";
+    note.innerHTML = `🔒 کشور ذخیره‌شده: <b>${C[save.player].flag} ${C[save.player].name}</b><br>
+      <span style="color:var(--muted);font-size:.72rem">این مرورگر روی این کشور قفل است.</span>
+      <br><button onclick="resetCountryLock()" style="margin-top:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-family:inherit;cursor:pointer;font-size:.75rem">تغییر کشور (پاک کردن ذخیره)</button>`;
+    const start = $("start");
+    const badge = start && start.querySelector(".badge");
+    if(badge) badge.after(note);
+    else if(start) start.insertBefore(note, start.firstChild);
+  }
+  // highlight locked country only
+  document.querySelectorAll(".ccard").forEach(card => {
+    const n = card.querySelector(".n")?.textContent;
+    const mine = C[save.player].name === n;
+    card.classList.toggle("sel", !!mine);
+    card.style.opacity = mine ? "1" : ".35";
+    card.style.pointerEvents = mine ? "auto" : "none";
+  });
+  $("btn-go").disabled = false;
+  const m=save.countries&&save.countries[save.player]?Math.floor(save.countries[save.player].money):null;
+  $("btn-go").textContent = m!=null ? ("ادامه بازی — "+C[save.player].name+" · "+m+"M$") : ("ادامه بازی — "+C[save.player].name);
+  return true;
+}
+function resetCountryLock(){
+  clearSave();
+  S.player = null;
+  location.reload();
+}
+function resumeGame(save){
+  try{
+    S.player = save.player;
+    S.countries = save.countries || JSON.parse(JSON.stringify(C));
+    Object.values(S.countries).forEach(c=>{
+      if(c.drones==null) c.drones = 0;
+      if(c.destroyers==null) c.destroyers = 0;
+      if(!c.eco) c.eco = {};
+      ensureRes(c);
+    });
+    S.relations = save.relations || JSON.parse(JSON.stringify(REL));
+    S.strat = save.strat || JSON.parse(JSON.stringify(STRAT));
+    normalizeStrat();
+    S.oilPrice = save.oilPrice || 100;
+    updateOilPrice();
+    S.queue = Array.isArray(save.queue) ? save.queue : [];
+    S.queue.forEach(i=>{ if(i && i.type && typeof i.fn!=="function") i.fn = rebuildFn(i.type); });
+    S.requests = Array.isArray(save.requests) ? save.requests : [];
+    S.news = Array.isArray(save.news) ? save.news : [];
+    S.unChat = Array.isArray(save.unChat) ? save.unChat : [];
+    S.notifs = Array.isArray(save.notifs) ? save.notifs : [];
+    S.intel = save.intel || {};
+    S.currentEvent = save.currentEvent || null;
+    if(S.currentEvent&&S.currentEvent.until>Date.now()){const ban=$("event-banner");if(ban){ban.classList.add("show");const et=$("event-title"),ed=$("event-desc");if(et)et.textContent=S.currentEvent.title;if(ed)ed.textContent=S.currentEvent.desc;}}
+    S.decls = Array.isArray(save.decls) ? save.decls : [];
+    S.year = save.year || 2026;
+    S.season = save.season || 0;
+    S.weather = save.weather || 1;
+    S.ceasefireEnd = save.ceasefireEnd || 0;
+    S.globalCeasefire = !!(S.ceasefireEnd && S.ceasefireEnd > Date.now());
+    S.started = true;
+    S.pms = {}; S.chat = []; S.log = [];
+    S.selected = null; S.battlePending = false; S.pendingForce = null;
+    $("start").style.display = "none";
+    $("game").style.display = "flex";
+    log("ادامه بازی — " + S.countries[S.player].flag + " " + S.countries[S.player].name, "imp");
+    chatAdd("سیستم", "بازی ذخیره‌شده بارگذاری شد.", "system");
+    full();
+    updateTimers();
+    setInterval(processQueue, 1000);
+    setInterval(incomeTick, 10000);
+    setInterval(aiTick, 8000);
+    setInterval(rQueue, 1000);
+    setInterval(updateTimers, 1000);
+  }catch(err){
+    console.error(err);
+    clearSave();
+    alert("ذخیره خراب بود. دوباره کشور انتخاب کنید.");
+    location.reload();
+  }
+}
+
+document.addEventListener("click",function(e){
+  const loader=$("page-loader");
+  if(loader && loader.classList.contains("show") && e.target===loader){ forceUnlockUI(); }
+  const p=$("notif-panel"), b=$("notif-btn");
+  if(!p||!p.classList.contains("show"))return;
+  if(p.contains(e.target)||(b&&b.contains(e.target)))return;
+  p.classList.remove("show");
+});
+forceUnlockUI();
+setInterval(forceUnlockUI, 4000);
+runLoad();
+rStart();
+// kill loading overlay hard
+setTimeout(function(){
+  var ld=document.getElementById('loading');
+  if(ld){ ld.classList.add('hide'); ld.style.display='none'; ld.style.pointerEvents='none'; ld.style.zIndex='-1'; }
+  var st=document.getElementById('start');
+  if(st && (!st.style.display || st.style.display==='none')) st.style.display='flex';
+  if(typeof bindStartBtn==='function') bindStartBtn();
+  if(typeof window.startGame==='function') window.startGame=startGame;
+}, 3000);
+
+setTimeout(function(){ bootFromSave(); }, 600);
+
+</script>
+</body>
+</html>
